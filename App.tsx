@@ -7,14 +7,11 @@ import { FilterBar } from './src/components/filter-bar';
 import { ProgressCard } from './src/components/progress-card';
 import { TaskForm } from './src/components/task-form';
 import { TaskList } from './src/components/task-list';
+import { createTaskId, taskRepository } from './src/composition/task-dependencies';
 import { colors, fontSize, radius } from './src/constants/theme';
 import { useTasks } from './src/hooks/use-tasks';
 import type { TaskFilter } from './src/types/task';
 
-/**
- * Pantalla principal (equivalente a ion-content).
- * Solo arma la interfaz: la lógica vive en useTasks() y cada sección es un componente.
- */
 export default function App() {
   const {
     tasks,
@@ -28,7 +25,7 @@ export default function App() {
     toggleTask,
     deleteTask,
     clearCompleted,
-  } = useTasks();
+  } = useTasks(taskRepository, createTaskId);
 
   const filters: { id: TaskFilter; label: string; count: number }[] = [
     { id: 'all', label: 'Todas', count: tasks.length },

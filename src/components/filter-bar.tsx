@@ -9,12 +9,10 @@ type FilterBarProps = {
   options: FilterOption[];
   selected: TaskFilter;
   onSelect: (filter: TaskFilter) => void;
-  /** Si es mayor que 0, aparece el botón "Limpiar hechas". */
   completedCount: number;
   onClearCompleted: () => void;
 };
 
-/** Filtros Todas / Pendientes / Hechas y el botón para borrar las tareas hechas. */
 export function FilterBar({
   options,
   selected,

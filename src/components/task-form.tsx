@@ -5,15 +5,9 @@ import { cardShadow, colors, fontSize, radius } from '../constants/theme';
 import type { TaskInput } from '../types/task';
 
 type TaskFormProps = {
-  /** Recibe el título y la descripción escritos por el usuario. */
   onSubmit: (task: TaskInput) => void;
 };
 
-/**
- * Formulario para agregar tareas
- * (equivalente a ion-input para título y descripción + ion-button para guardar).
- * Después de guardar, limpia los dos campos.
- */
 export function TaskForm({ onSubmit }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');

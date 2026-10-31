@@ -2,10 +2,6 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, fontSize } from '../constants/theme';
 
-/**
- * Parte superior de la pantalla (equivalente a ion-header):
- * marca de la app, indicador de guardado, fecha de hoy y mensaje principal.
- */
 export function AppHeader() {
   const todayLabel = new Intl.DateTimeFormat('es-ES', {
     weekday: 'long',

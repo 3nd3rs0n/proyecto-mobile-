@@ -1,30 +1,44 @@
-# Paso a paso — Lista de tareas
+# Paso a paso
 
-Aplicación móvil de demostración creada con React Native y Expo. Permite añadir tareas, marcarlas como completadas, filtrarlas y eliminarlas. Las tareas se guardan en el dispositivo.
+Lista de tareas en React Native y Expo. Permite añadir tareas con descripción,
+marcarlas como completadas, filtrarlas y eliminarlas. Los datos se guardan en el dispositivo.
 
-## Requisitos
+## Desarrollo
 
-- Node.js 20 o superior
-- npm
-- Expo Go en el teléfono para probar la app
-
-## Ejecutar en el teléfono
-
-Desde esta carpeta, instala las dependencias e inicia Expo:
+Requisitos: Node.js 20 o superior, npm y Expo Go para probar en un teléfono.
 
 ```bash
 npm install
 npm start
 ```
 
-Escanea el código QR que aparece en la terminal con Expo Go. El ordenador y el teléfono deben estar conectados a la misma red Wi-Fi.
+Escanea el QR con Expo Go. El teléfono y el ordenador deben estar en la misma red Wi-Fi.
 
-## Ejecutar en Android
-
-Con un emulador Android abierto, ejecuta:
+Para ejecutar en un emulador Android:
 
 ```bash
 npm run android
 ```
 
-Para generar o reconstruir el proyecto nativo de Android, usa `npx expo prebuild --platform android`. La app guarda la lista localmente y no necesita configurar un servidor o una base de datos.
+Para generar el proyecto nativo: `npx expo prebuild --platform android`.
+
+## Estructura
+
+- `src/components`: interfaz.
+- `src/domain`: operaciones, filtros y progreso de las tareas.
+- `src/hooks/use-tasks.ts`: estado, carga y guardado.
+- `src/repositories`: contrato de persistencia y adaptador de almacenamiento.
+- `src/composition`: configuración de AsyncStorage y generación de IDs.
+
+El hook recibe sus dependencias; las reglas de tareas no dependen de React ni de AsyncStorage.
+Se usa la clave `paso-a-paso.tasks` y se aceptan tareas antiguas sin descripción.
+
+## Pruebas
+
+```bash
+npm run typecheck
+npm test
+```
+
+Cubren las operaciones de tareas, el progreso, la persistencia y la compatibilidad de datos.
+El código de prueba se compila en `.test-build`, excluido de Git.

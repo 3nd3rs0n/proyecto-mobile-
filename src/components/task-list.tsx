@@ -6,13 +6,12 @@ import { TaskItem } from './task-item';
 
 type TaskListProps = {
   tasks: Task[];
-  /** Total de tareas sin filtrar: sirve para elegir el mensaje cuando la lista está vacía. */
+  /** Total sin aplicar el filtro actual. */
   totalCount: number;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
 };
 
-/** Lista de tareas (equivalente a ion-list), con un mensaje cuando no hay ninguna. */
 export function TaskList({ tasks, totalCount, onToggle, onDelete }: TaskListProps) {
   if (tasks.length === 0) {
     return <EmptyState listIsEmpty={totalCount === 0} />;

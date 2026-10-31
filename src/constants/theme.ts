@@ -1,8 +1,3 @@
-/**
- * Colores, tamaños de letra y espaciado de la app.
- * Centralizarlos aquí mantiene la interfaz consistente:
- * ningún componente escribe un color o un tamaño "a mano".
- */
 export const colors = {
   background: '#F6F5FB',
   surface: '#FFFFFF',
@@ -14,7 +9,6 @@ export const colors = {
   progress: '#7569E2',
   success: '#58A58F',
   saved: '#42A98C',
-  danger: '#D14B5A',
   dangerSoft: '#FDEEF0',
   text: '#28263A',
   textBody: '#39374B',
@@ -27,7 +21,6 @@ export const colors = {
   white: '#FFFFFF',
 } as const;
 
-/** Tamaños de letra. El mínimo es 11 para que todo sea legible en un teléfono. */
 export const fontSize = {
   kicker: 11,
   small: 12,
@@ -39,7 +32,6 @@ export const fontSize = {
   hero: 49,
 } as const;
 
-/** Tamaño mínimo de cualquier zona tocable (recomendación de Android: 48). */
 export const touchTarget = 44;
 
 export const radius = {
@@ -48,7 +40,6 @@ export const radius = {
   lg: 20,
 } as const;
 
-/** Sombra suave compartida por las tarjetas. */
 export const cardShadow = {
   shadowColor: '#322C5E',
   shadowOpacity: 0.04,

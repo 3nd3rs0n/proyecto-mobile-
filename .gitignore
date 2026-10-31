@@ -20,6 +20,7 @@ expo-env.d.ts
 .metro-health-check*
 
 # Debug and test output
+.test-build/
 npm-debug.*
 yarn-debug.*
 playwright-report/

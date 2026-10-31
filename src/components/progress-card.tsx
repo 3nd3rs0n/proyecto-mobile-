@@ -8,7 +8,6 @@ type ProgressCardProps = {
   percent: number;
 };
 
-/** Tarjeta con el avance: cuántas tareas están hechas y una barra de progreso. */
 export function ProgressCard({ completed, total, percent }: ProgressCardProps) {
   return (
     <View style={styles.card}>

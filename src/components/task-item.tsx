@@ -9,10 +9,6 @@ type TaskItemProps = {
   onDelete: (id: string) => void;
 };
 
-/**
- * Una tarea de la lista (equivalente a ion-item):
- * casilla para completar, título, descripción y botón para eliminar.
- */
 export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
   return (
     <View style={styles.card}>
