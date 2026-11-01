@@ -17,6 +17,23 @@ export function createTask(
   };
 }
 
+/**
+ * Cambia el título y la descripción de una tarea; conserva su id, su estado y su posición.
+ * Con un título vacío no cambia nada.
+ */
+export function updateTask(
+  tasks: readonly Task[],
+  id: string,
+  { title, description }: TaskInput,
+): Task[] {
+  const cleanTitle = title.trim();
+  if (!cleanTitle) return [...tasks];
+
+  return tasks.map((task) =>
+    task.id === id ? { ...task, title: cleanTitle, description: description.trim() } : task,
+  );
+}
+
 export function toggleTask(tasks: readonly Task[], id: string): Task[] {
   return tasks.map((task) =>
     task.id === id ? { ...task, completed: !task.completed } : task,
