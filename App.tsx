@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { type ComponentRef, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,7 +11,7 @@ import { TaskList } from './src/components/task-list';
 import { createTaskId, taskRepository } from './src/composition/task-dependencies';
 import { colors, fontSize, radius } from './src/constants/theme';
 import { useTasks } from './src/hooks/use-tasks';
-import type { TaskFilter } from './src/types/task';
+import type { TaskFilter, TaskInput } from './src/types/task';
 
 export default function App() {
   const {
@@ -22,10 +23,34 @@ export default function App() {
     pendingCount,
     completionPercent,
     addTask,
+    updateTask,
     toggleTask,
     deleteTask,
     clearCompleted,
   } = useTasks(taskRepository, createTaskId);
+
+  // Tarea que está en el formulario. Si se elimina, el formulario vuelve a "Añadir".
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const editingTask = tasks.find((task) => task.id === editingId) ?? null;
+
+  const scrollRef = useRef<ComponentRef<typeof ScrollView>>(null);
+  const sectionY = useRef(0);
+  const formY = useRef(0);
+
+  const startEditing = (id: string) => {
+    setEditingId(id);
+    // Sube hasta el formulario, que está sobre la lista.
+    scrollRef.current?.scrollTo({ y: Math.max(sectionY.current + formY.current - 16, 0), animated: true });
+  };
+
+  const submitTask = (input: TaskInput) => {
+    if (editingTask) {
+      updateTask(editingTask.id, input);
+      setEditingId(null);
+    } else {
+      addTask(input);
+    }
+  };
 
   const filters: { id: TaskFilter; label: string; count: number }[] = [
     { id: 'all', label: 'Todas', count: tasks.length },
@@ -42,6 +67,7 @@ export default function App() {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <ScrollView
+            ref={scrollRef}
             contentContainerStyle={styles.content}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -54,7 +80,12 @@ export default function App() {
               percent={completionPercent}
             />
 
-            <View style={styles.tasksSection}>
+            <View
+              style={styles.tasksSection}
+              onLayout={(event) => {
+                sectionY.current = event.nativeEvent.layout.y;
+              }}
+            >
               <View style={styles.sectionHeading}>
                 <View>
                   <Text style={styles.sectionKicker}>TU DÍA, A TU MANERA</Text>
@@ -67,7 +98,17 @@ export default function App() {
                 </View>
               </View>
 
-              <TaskForm onSubmit={addTask} />
+              <View
+                onLayout={(event) => {
+                  formY.current = event.nativeEvent.layout.y;
+                }}
+              >
+                <TaskForm
+                  onSubmit={submitTask}
+                  editingTask={editingTask}
+                  onCancelEdit={() => setEditingId(null)}
+                />
+              </View>
 
               <FilterBar
                 options={filters}
@@ -82,6 +123,8 @@ export default function App() {
                 totalCount={tasks.length}
                 onToggle={toggleTask}
                 onDelete={deleteTask}
+                onEdit={startEditing}
+                editingId={editingTask?.id ?? null}
               />
             </View>
 

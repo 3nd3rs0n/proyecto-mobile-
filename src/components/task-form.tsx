@@ -1,20 +1,33 @@
-import { type ComponentRef, useRef, useState } from 'react';
+import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { cardShadow, colors, fontSize, radius } from '../constants/theme';
-import type { TaskInput } from '../types/task';
+import type { Task, TaskInput } from '../types/task';
 
 type TaskFormProps = {
   onSubmit: (task: TaskInput) => void;
+  /** Con una tarea, el formulario pasa a modo edición y se llena con sus datos. */
+  editingTask?: Task | null;
+  onCancelEdit?: () => void;
 };
 
-export function TaskForm({ onSubmit }: TaskFormProps) {
+export function TaskForm({ onSubmit, editingTask = null, onCancelEdit }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [focused, setFocused] = useState(false);
+  const titleRef = useRef<ComponentRef<typeof TextInput>>(null);
   const descriptionRef = useRef<ComponentRef<typeof TextInput>>(null);
 
+  const isEditing = editingTask !== null;
   const canSubmit = title.trim().length > 0;
+  const editingId = editingTask?.id;
+
+  // Al elegir otra tarea para editar (o al salir de la edición) se cargan sus datos.
+  useEffect(() => {
+    setTitle(editingTask?.title ?? '');
+    setDescription(editingTask?.description ?? '');
+    if (editingTask) titleRef.current?.focus();
+  }, [editingId]);
 
   const submit = () => {
     if (!canSubmit) return;
@@ -23,9 +36,35 @@ export function TaskForm({ onSubmit }: TaskFormProps) {
     setDescription('');
   };
 
+  const cancel = () => {
+    setTitle('');
+    setDescription('');
+    onCancelEdit?.();
+  };
+
+  const submitLabel = isEditing ? 'Guardar' : 'Añadir';
+  let hint = canSubmit ? 'Listo para añadir' : 'Escribe un título para añadir';
+  if (isEditing) hint = canSubmit ? 'Guarda o cancela los cambios' : 'El título no puede quedar vacío';
+
   return (
-    <View style={[styles.card, focused && styles.cardFocused]}>
+    <View style={[styles.card, (focused || isEditing) && styles.cardFocused]}>
+      {isEditing && (
+        <View style={styles.editingBanner}>
+          <Text style={styles.editingLabel}>EDITANDO TAREA</Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Cancelar edición"
+            onPress={cancel}
+            hitSlop={8}
+            style={styles.cancelButton}
+          >
+            <Text style={styles.cancelText}>Cancelar</Text>
+          </Pressable>
+        </View>
+      )}
+
       <TextInput
+        ref={titleRef}
         accessibilityLabel="Título de la tarea"
         style={styles.titleInput}
         value={title}
@@ -58,12 +97,10 @@ export function TaskForm({ onSubmit }: TaskFormProps) {
       />
 
       <View style={styles.footer}>
-        <Text style={styles.hint}>
-          {canSubmit ? 'Listo para añadir' : 'Escribe un título para añadir'}
-        </Text>
+        <Text style={styles.hint}>{hint}</Text>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Añadir tarea"
+          accessibilityLabel={isEditing ? 'Guardar cambios' : 'Añadir tarea'}
           accessibilityState={{ disabled: !canSubmit }}
           disabled={!canSubmit}
           onPress={submit}
@@ -73,8 +110,8 @@ export function TaskForm({ onSubmit }: TaskFormProps) {
             pressed && styles.addButtonPressed,
           ]}
         >
-          <Text style={styles.addButtonIcon}>+</Text>
-          <Text style={styles.addButtonText}>Añadir</Text>
+          <Text style={styles.addButtonIcon}>{isEditing ? '✓' : '+'}</Text>
+          <Text style={styles.addButtonText}>{submitLabel}</Text>
         </Pressable>
       </View>
     </View>
@@ -92,6 +129,28 @@ const styles = StyleSheet.create({
   },
   cardFocused: {
     borderColor: colors.primary,
+  },
+  editingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingTop: 4,
+  },
+  editingLabel: {
+    color: colors.primary,
+    fontSize: fontSize.kicker,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+  },
+  cancelButton: {
+    minHeight: 32,
+    justifyContent: 'center',
+  },
+  cancelText: {
+    color: colors.textMuted,
+    fontSize: fontSize.small,
+    fontWeight: '600',
   },
   titleInput: {
     minHeight: 44,

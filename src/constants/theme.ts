@@ -9,6 +9,7 @@ export const colors = {
   progress: '#7569E2',
   success: '#58A58F',
   saved: '#42A98C',
+  danger: '#B4233C',
   dangerSoft: '#FDEEF0',
   text: '#28263A',
   textBody: '#39374B',

@@ -7,11 +7,14 @@ type TaskItemProps = {
   task: Task;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
+  /** Resalta la tarjeta mientras su tarea está en el formulario. */
+  isEditing?: boolean;
 };
 
-export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
+export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false }: TaskItemProps) {
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, isEditing && styles.cardEditing]}>
       <Pressable
         accessibilityRole="checkbox"
         accessibilityLabel={
@@ -35,35 +38,67 @@ export function TaskItem({ task, onToggle, onDelete }: TaskItemProps) {
             {task.description}
           </Text>
         )}
-      </View>
 
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Eliminar ${task.title}`}
-        onPress={() => onDelete(task.id)}
-        hitSlop={4}
-        style={({ pressed }) => [styles.deleteButton, pressed && styles.deleteButtonPressed]}
-      >
-        <Text style={styles.deleteText}>×</Text>
-      </Pressable>
+        {/* Botones con ícono y texto para que se entienda qué hace cada uno. */}
+        <View style={styles.actions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Editar ${task.title}`}
+            accessibilityState={{ selected: isEditing }}
+            onPress={() => onEdit(task.id)}
+            hitSlop={4}
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.editButton,
+              isEditing && styles.editButtonActive,
+              pressed && styles.actionPressed,
+            ]}
+          >
+            <Text style={[styles.actionIcon, styles.editLabel, isEditing && styles.editLabelActive]}>
+              ✎
+            </Text>
+            <Text style={[styles.actionLabel, styles.editLabel, isEditing && styles.editLabelActive]}>
+              {isEditing ? 'Editando…' : 'Editar'}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Eliminar ${task.title}`}
+            onPress={() => onDelete(task.id)}
+            hitSlop={4}
+            style={({ pressed }) => [
+              styles.actionButton,
+              styles.deleteButton,
+              pressed && styles.actionPressed,
+            ]}
+          >
+            <Text style={[styles.actionIcon, styles.deleteLabel]}>×</Text>
+            <Text style={[styles.actionLabel, styles.deleteLabel]}>Eliminar</Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 64,
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+    alignItems: 'flex-start',
+    gap: 8,
     paddingVertical: 10,
-    paddingLeft: 10,
-    paddingRight: 8,
+    paddingLeft: 8,
+    paddingRight: 14,
     borderWidth: 1,
     borderColor: colors.borderSoft,
     borderRadius: radius.md,
     backgroundColor: colors.surface,
     ...cardShadow,
+  },
+  cardEditing: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
   },
   toggle: {
     width: touchTarget,
@@ -93,6 +128,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     gap: 3,
+    paddingTop: 10,
   },
   title: {
     color: colors.textBody,
@@ -112,20 +148,51 @@ const styles = StyleSheet.create({
   descriptionCompleted: {
     color: colors.placeholder,
   },
-  deleteButton: {
-    width: touchTarget,
-    height: touchTarget,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.sm,
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
   },
-  deleteButtonPressed: {
+  actionButton: {
+    minHeight: 36,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    borderRadius: radius.sm,
+    borderWidth: 1,
+  },
+  actionPressed: {
+    opacity: 0.7,
+  },
+  actionIcon: {
+    fontSize: 16,
+    fontWeight: '600',
+    lineHeight: 18,
+  },
+  actionLabel: {
+    fontSize: fontSize.body - 1,
+    fontWeight: '600',
+  },
+  editButton: {
+    borderColor: colors.primarySelected,
+    backgroundColor: colors.primarySoft,
+  },
+  editButtonActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primary,
+  },
+  editLabel: {
+    color: colors.primaryText,
+  },
+  editLabelActive: {
+    color: colors.white,
+  },
+  deleteButton: {
+    borderColor: '#F6D3D9',
     backgroundColor: colors.dangerSoft,
   },
-  deleteText: {
-    color: colors.textSubtle,
-    fontSize: 26,
-    fontWeight: '300',
-    lineHeight: 28,
+  deleteLabel: {
+    color: colors.danger,
   },
 });

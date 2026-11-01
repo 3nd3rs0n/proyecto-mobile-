@@ -48,6 +48,10 @@ export function useTasks(repository: TaskRepository, createId: TaskIdFactory) {
     setTasks((currentTasks) => [task, ...currentTasks]);
   };
 
+  const updateTask = (id: string, input: TaskInput) => {
+    setTasks((currentTasks) => taskOperations.updateTask(currentTasks, id, input));
+  };
+
   const toggleTask = (id: string) => {
     setTasks((currentTasks) => taskOperations.toggleTask(currentTasks, id));
   };
@@ -67,6 +71,7 @@ export function useTasks(repository: TaskRepository, createId: TaskIdFactory) {
     setFilter,
     ...summarizeTasks(tasks),
     addTask,
+    updateTask,
     toggleTask,
     deleteTask,
     clearCompleted,

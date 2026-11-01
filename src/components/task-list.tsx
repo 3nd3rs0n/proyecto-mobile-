@@ -10,9 +10,18 @@ type TaskListProps = {
   totalCount: number;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (id: string) => void;
+  editingId?: string | null;
 };
 
-export function TaskList({ tasks, totalCount, onToggle, onDelete }: TaskListProps) {
+export function TaskList({
+  tasks,
+  totalCount,
+  onToggle,
+  onDelete,
+  onEdit,
+  editingId = null,
+}: TaskListProps) {
   if (tasks.length === 0) {
     return <EmptyState listIsEmpty={totalCount === 0} />;
   }
@@ -20,7 +29,14 @@ export function TaskList({ tasks, totalCount, onToggle, onDelete }: TaskListProp
   return (
     <View style={styles.list}>
       {tasks.map((task) => (
-        <TaskItem key={task.id} task={task} onToggle={onToggle} onDelete={onDelete} />
+        <TaskItem
+          key={task.id}
+          task={task}
+          onToggle={onToggle}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          isEditing={task.id === editingId}
+        />
       ))}
     </View>
   );

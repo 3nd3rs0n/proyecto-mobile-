@@ -7,6 +7,7 @@ import {
   createTask,
   deleteTask,
   toggleTask,
+  updateTask,
 } from '../src/domain/task-operations';
 import { selectTasks, summarizeTasks } from '../src/domain/task-selectors';
 import type { Task } from '../src/types/task';
@@ -26,6 +27,24 @@ test('un título vacío no crea una tarea ni consume un identificador', () => {
   assert.equal(createTask({ title: ' \n\t ', description: 'Opcional' }, () => {
     assert.fail('No debe generar un ID para una tarea inválida');
   }), null);
+});
+
+test('editar cambia título y descripción y conserva id, estado y posición', () => {
+  const edited = updateTask(tasks, 'demo-1', { title: '  Planificar el mes  ', description: '  Nueva  ' });
+  assert.deepEqual(edited[0], {
+    id: 'demo-1', title: 'Planificar el mes', description: 'Nueva', completed: true,
+  });
+  assert.deepEqual([edited[1], edited[2]], [tasks[1], tasks[2]]);
+  assert.equal(tasks[0].title, 'Planificar la semana');
+});
+
+test('editar permite borrar la descripción', () => {
+  assert.equal(updateTask(tasks, 'demo-3', { title: 'Terminar', description: '   ' })[2].description, '');
+});
+
+test('editar con título vacío o id inexistente no cambia nada', () => {
+  assert.deepEqual(updateTask(tasks, 'demo-1', { title: '  ', description: 'Algo' }), tasks);
+  assert.deepEqual(updateTask(tasks, 'missing', { title: 'Nuevo', description: '' }), tasks);
 });
 
 test('completar es reversible y no modifica la lista original', () => {
