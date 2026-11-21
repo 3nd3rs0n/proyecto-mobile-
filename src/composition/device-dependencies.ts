@@ -52,7 +52,7 @@ const locationGateway: LocationGateway = {
   },
 };
 
-export const permissionService = createPermissionService({
+const permissionService = createPermissionService({
   gateways: {
     camera: {
       check: () => ImagePicker.getCameraPermissionsAsync(),
@@ -66,14 +66,20 @@ export const permissionService = createPermissionService({
   openSettings: () => Linking.openSettings(),
 });
 
-export const cameraService = createCameraService({
+const cameraService = createCameraService({
   camera: cameraGateway,
   permissions: permissionService,
 });
 
-export const locationService = createLocationService({
+const locationService = createLocationService({
   location: locationGateway,
   permissions: permissionService,
   timeoutMs: 10_000,
   now: Date.now,
 });
+
+export const deviceServices = {
+  camera: cameraService,
+  location: locationService,
+  permissions: permissionService,
+};

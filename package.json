@@ -7,7 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
-    "test": "tsc -p tsconfig.tests.json && node --test .test-build/tests/task-domain.test.js .test-build/tests/task-repository.test.js .test-build/tests/permission-service.test.js .test-build/tests/camera-service.test.js .test-build/tests/location-service.test.js"
+    "test": "tsc -p tsconfig.tests.json && node --test .test-build/tests/task-domain.test.js .test-build/tests/task-repository.test.js .test-build/tests/permission-service.test.js .test-build/tests/camera-service.test.js .test-build/tests/location-service.test.js .test-build/tests/device-notice.test.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~58.0.15",
@@ -25,6 +25,7 @@
     "react-native-web": "^0.21.4"
   },
   "devDependencies": {
+    "@types/node": "^26.6.6",
     "@types/react": "~19.3.0",
     "typescript": "~6.0.3"
   },

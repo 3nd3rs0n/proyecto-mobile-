@@ -1,7 +1,13 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 
-import { formatAddress, isValidCoordinates } from '../src/domain/task-location';
+import {
+  APPROXIMATE_ACCURACY_M,
+  describeLocation,
+  formatAddress,
+  isValidCoordinates,
+  mapUrl,
+} from '../src/domain/task-location';
 import {
   createLocationService,
   LAST_KNOWN_MAX_AGE_MS,
@@ -161,4 +167,20 @@ test('arma la dirección sin partes vacías ni repetidas', () => {
   );
   assert.equal(formatAddress([null, ' Santiago ', 'Santiago']), 'Santiago');
   assert.equal(formatAddress([null, '', '  ']), null);
+});
+
+test('describe la ubicación con la dirección o, si no hay, con las coordenadas', () => {
+  const base = { latitude: -33.44891, longitude: -70.66931, accuracy: 12, capturedAt: NOW };
+  assert.equal(describeLocation({ ...base, address: 'Santiago' }), 'Santiago');
+  assert.equal(describeLocation({ ...base, address: null }), '-33.4489, -70.6693');
+  assert.equal(
+    describeLocation({ ...base, address: 'Santiago', accuracy: APPROXIMATE_ACCURACY_M + 1 }),
+    'Santiago (aprox.)',
+  );
+});
+
+test('arma el enlace al mapa de cada plataforma', () => {
+  const location = { latitude: -33.4489, longitude: -70.6693, accuracy: 12, address: null, capturedAt: NOW };
+  assert.equal(mapUrl(location, 'ios'), 'https://maps.apple.com/?ll=-33.4489,-70.6693');
+  assert.equal(mapUrl(location, 'other'), 'geo:-33.4489,-70.6693?q=-33.4489,-70.6693');
 });
