@@ -18,6 +18,7 @@ export type Task = {
   createdAt?: number;
 };
 
-export type TaskInput = Pick<Task, 'title' | 'description'>;
+/** photoUri puede ser temporal (recién sacada de la cámara); useTasks la guarda. */
+export type TaskInput = Pick<Task, 'title' | 'description' | 'photoUri' | 'location'>;
 
 export type TaskFilter = 'all' | 'active' | 'completed';
