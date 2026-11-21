@@ -1,5 +1,15 @@
 # Paso a paso — Lista de tareas en React Native
 
+**Actualización Unidad 2:** registro, login, logout y sesión local persistente; tareas separadas por usuario e importación explícita de datos antiguos. Consulta [implementación, pruebas y contratos de integración](docs/UNIDAD_2.md).
+
+La autenticación se ejecuta con Expo Go en Android/iOS y requiere SecureStore. La versión web no ofrece autenticación local. Para las herramientas se recomienda Node 22.12 o superior (verificado con Node 24.11.0).
+
+La auditoría actual conserva los parámetros criptográficos, reduce trabajo redundante y permite medir por etapas en Expo Go con `EXPO_PUBLIC_AUTH_DIAGNOSTICS=1`. Consulta las [mediciones de Node y el diagnóstico en dispositivo](docs/UNIDAD_2.md#diagnóstico-en-expo-go); los tiempos en un teléfono siguen pendientes. La suite actual tiene 64 pruebas.
+
+Después de integrar `main`, las tareas usan `imageUri`, `createdAt` en ISO UTC y un único modelo GPS compatible con los datos anteriores. Consulta la [integración y los respaldos de metadatos](docs/UNIDAD_2.md#integración-después-de-git-pull-y-stash-pop). El código integrado de cámara, fotos, permisos y GPS contiene contratos y dependencias; la captura y sus adaptadores nativos todavía no están implementados.
+
+El informe siguiente documenta la entrega original de Unidad 1; el estado actual y las pruebas de Unidad 2 están en el documento enlazado.
+
 **Evaluación Unidad 1 · Desarrollo de Aplicaciones Móviles · Instituto Profesional San Sebastián**
 
 | Dato | Detalle |

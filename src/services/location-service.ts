@@ -2,11 +2,7 @@ import type { DeviceResult } from '../types/device';
 import type { TaskLocation } from '../types/task';
 import type { PermissionService } from './permission-service';
 
-export type Coordinates = {
-  latitude: number;
-  longitude: number;
-  accuracy: number | null;
-};
+export type Coordinates = Omit<TaskLocation, 'address'> & { accuracy: number | null };
 
 export interface LocationGateway {
   /** false si el GPS está apagado. */

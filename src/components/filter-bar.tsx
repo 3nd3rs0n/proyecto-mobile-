@@ -11,6 +11,7 @@ type FilterBarProps = {
   onSelect: (filter: TaskFilter) => void;
   completedCount: number;
   onClearCompleted: () => void;
+  disabled?: boolean;
 };
 
 export function FilterBar({
@@ -19,6 +20,7 @@ export function FilterBar({
   onSelect,
   completedCount,
   onClearCompleted,
+  disabled = false,
 }: FilterBarProps) {
   return (
     <View style={styles.bar}>
@@ -29,7 +31,8 @@ export function FilterBar({
             <Pressable
               key={option.id}
               accessibilityRole="button"
-              accessibilityState={{ selected: isSelected }}
+              accessibilityState={{ selected: isSelected, disabled }}
+              disabled={disabled}
               onPress={() => onSelect(option.id)}
               style={[styles.pill, isSelected && styles.pillSelected]}
             >
@@ -47,6 +50,8 @@ export function FilterBar({
       {completedCount > 0 && (
         <Pressable
           accessibilityRole="button"
+          disabled={disabled}
+          accessibilityState={{ disabled }}
           onPress={onClearCompleted}
           style={styles.clearButton}
         >

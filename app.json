@@ -11,6 +11,9 @@
     },
     "android": {
       "package": "com.example.todolist"
-    }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
   }
 }

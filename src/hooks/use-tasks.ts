@@ -1,79 +1,78 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-import { STARTER_TASKS } from '../constants/starter-tasks';
-import * as taskOperations from '../domain/task-operations';
+import { createTaskSession } from '../repositories/user-task-repository';
+import { authTiming } from '../domain/auth-service';
 import type { TaskIdFactory } from '../domain/task-operations';
 import { selectTasks, summarizeTasks } from '../domain/task-selectors';
 import type { TaskRepository } from '../repositories/task-repository';
 import type { Task, TaskFilter, TaskInput } from '../types/task';
 
-/** Mantener repository y createId estables durante el montaje. */
-export function useTasks(repository: TaskRepository, createId: TaskIdFactory) {
-  const [tasks, setTasks] = useState<Task[]>(STARTER_TASKS);
+/** El contenedor usa key=user.id: cada montaje tiene su propia sesión. */
+export function useTasks(repository: TaskRepository, createId: TaskIdFactory, userId: string) {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<TaskFilter>('all');
-  const [storageReady, setStorageReady] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const sessionRef = useRef<ReturnType<typeof createTaskSession> | null>(null);
+  const pending = useRef(false);
 
   useEffect(() => {
+    const session = createTaskSession(repository, userId, createId);
+    sessionRef.current = session;
     let mounted = true;
-
-    const loadTasks = async () => {
-      try {
-        const savedTasks = await repository.load();
-        if (mounted) setTasks(savedTasks ?? STARTER_TASKS);
-      } catch {
-        if (mounted) setTasks(STARTER_TASKS);
-      } finally {
-        if (mounted) setStorageReady(true);
-      }
-    };
-
-    void loadTasks();
+    setTasks([]);
+    setReady(false);
+    void authTiming.measure('tareas_carga_inicial', () => session.load()).then((loaded) => {
+      if (mounted) { setTasks(loaded); setReady(true); }
+    }).catch(() => {
+      if (mounted) setError('No se pudieron cargar tus tareas. Reintenta para proteger los datos guardados.');
+    });
     return () => {
       mounted = false;
+      sessionRef.current = null;
+      void session.close();
     };
-  }, [repository]);
+  }, [repository, createId, userId]);
 
   useEffect(() => {
-    if (!storageReady) return;
+    if (ready) authTiming.mark('tareas_mostradas');
+  }, [ready]);
 
-    repository.save(tasks).catch(() => {
-      // La app sigue funcionando aunque el dispositivo no permita guardar datos.
-    });
-  }, [tasks, storageReady, repository]);
-
-  const addTask = (input: TaskInput) => {
-    const task = taskOperations.createTask(input, createId);
-    if (task === null) return;
-
-    setTasks((currentTasks) => [task, ...currentTasks]);
-  };
-
-  const updateTask = (id: string, input: TaskInput) => {
-    setTasks((currentTasks) => taskOperations.updateTask(currentTasks, id, input));
-  };
-
-  const toggleTask = (id: string) => {
-    setTasks((currentTasks) => taskOperations.toggleTask(currentTasks, id));
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks((currentTasks) => taskOperations.deleteTask(currentTasks, id));
-  };
-
-  const clearCompleted = () => {
-    setTasks(taskOperations.clearCompletedTasks);
+  const perform = async (operation: (session: ReturnType<typeof createTaskSession>) => Promise<Task[]>) => {
+    const session = sessionRef.current;
+    if (!session || pending.current) return false;
+    pending.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      const result = await operation(session);
+      if (sessionRef.current !== session) return false;
+      setTasks(result);
+      setReady(true);
+      return true;
+    } catch {
+      if (sessionRef.current === session) setError('No se pudo completar la operación. Tus cambios no se confirmaron; vuelve a intentarlo.');
+      return false;
+    } finally {
+      pending.current = false;
+      if (sessionRef.current === session) setBusy(false);
+    }
   };
 
   return {
-    tasks,
+    tasks, ready, busy, error,
     visibleTasks: selectTasks(tasks, filter),
     filter,
     setFilter,
     ...summarizeTasks(tasks),
-    addTask,
-    updateTask,
-    toggleTask,
-    deleteTask,
-    clearCompleted,
+    retry: () => perform((session) => session.load()),
+    addTask: (input: TaskInput) => perform((session) => session.add(input)),
+    updateTask: (id: string, input: TaskInput) => perform((session) => session.update(id, input)),
+    toggleTask: (id: string) => perform((session) => session.toggle(id)),
+    deleteTask: (id: string) => perform((session) => session.delete(id)),
+    clearCompleted: () => perform((session) => session.clearCompleted()),
+    importLegacy: (importer: () => Promise<Task[]>) => perform((session) => session.importLegacy(importer)),
+    flush: async () => { await sessionRef.current?.flush(); },
   };
 }

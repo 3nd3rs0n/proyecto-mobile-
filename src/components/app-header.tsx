@@ -16,7 +16,7 @@ export function AppHeader() {
           <View style={styles.brandMark}>
             <Text style={styles.brandCheck}>✓</Text>
           </View>
-          <Text style={styles.brandName}>paso a paso</Text>
+          <Text style={styles.brandName}>IPSS Eva 2</Text>
         </View>
         <View style={styles.saveIndicator}>
           <View style={styles.saveDot} />

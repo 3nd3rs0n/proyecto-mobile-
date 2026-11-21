@@ -5,13 +5,14 @@ import { cardShadow, colors, fontSize, radius } from '../constants/theme';
 import type { Task, TaskInput } from '../types/task';
 
 type TaskFormProps = {
-  onSubmit: (task: TaskInput) => void;
+  onSubmit: (task: TaskInput) => Promise<boolean>;
+  disabled?: boolean;
   /** Con una tarea, el formulario pasa a modo edición y se llena con sus datos. */
   editingTask?: Task | null;
   onCancelEdit?: () => void;
 };
 
-export function TaskForm({ onSubmit, editingTask = null, onCancelEdit }: TaskFormProps) {
+export function TaskForm({ onSubmit, editingTask = null, onCancelEdit, disabled = false }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [focused, setFocused] = useState(false);
@@ -19,7 +20,7 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit }: TaskFor
   const descriptionRef = useRef<ComponentRef<typeof TextInput>>(null);
 
   const isEditing = editingTask !== null;
-  const canSubmit = title.trim().length > 0;
+  const canSubmit = !disabled && title.trim().length > 0;
   const editingId = editingTask?.id;
 
   // Al elegir otra tarea para editar (o al salir de la edición) se cargan sus datos.
@@ -29,9 +30,9 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit }: TaskFor
     if (editingTask) titleRef.current?.focus();
   }, [editingId]);
 
-  const submit = () => {
+  const submit = async () => {
     if (!canSubmit) return;
-    onSubmit({ title, description });
+    if (!await onSubmit({ title, description })) return;
     setTitle('');
     setDescription('');
   };
@@ -54,6 +55,7 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit }: TaskFor
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Cancelar edición"
+            disabled={disabled}
             onPress={cancel}
             hitSlop={8}
             style={styles.cancelButton}
@@ -65,6 +67,7 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit }: TaskFor
 
       <TextInput
         ref={titleRef}
+        editable={!disabled}
         accessibilityLabel="Título de la tarea"
         style={styles.titleInput}
         value={title}
@@ -83,6 +86,7 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit }: TaskFor
 
       <TextInput
         ref={descriptionRef}
+        editable={!disabled}
         accessibilityLabel="Descripción de la tarea"
         style={styles.descriptionInput}
         value={description}
