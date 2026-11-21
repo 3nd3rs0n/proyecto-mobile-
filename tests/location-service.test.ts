@@ -1,7 +1,7 @@
 import { strict as assert } from 'node:assert';
 import { test } from 'node:test';
 
-import { isValidCoordinates } from '../src/domain/task-location';
+import { formatAddress, isValidCoordinates } from '../src/domain/task-location';
 import {
   createLocationService,
   LAST_KNOWN_MAX_AGE_MS,
@@ -152,4 +152,13 @@ test('valida los límites de latitud y longitud', () => {
   assert.equal(isValidCoordinates(-90.0001, 0), false);
   assert.equal(isValidCoordinates(0, 180.0001), false);
   assert.equal(isValidCoordinates(Number.NaN, 0), false);
+});
+
+test('arma la dirección sin partes vacías ni repetidas', () => {
+  assert.equal(
+    formatAddress(['Av. Providencia', 'Providencia', 'Santiago']),
+    'Av. Providencia, Providencia, Santiago',
+  );
+  assert.equal(formatAddress([null, ' Santiago ', 'Santiago']), 'Santiago');
+  assert.equal(formatAddress([null, '', '  ']), null);
 });
