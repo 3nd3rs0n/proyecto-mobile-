@@ -7,7 +7,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "typecheck": "tsc --noEmit",
-    "test": "tsc -p tsconfig.tests.json && node --test .test-build/tests/task-domain.test.js .test-build/tests/task-repository.test.js .test-build/tests/permission-service.test.js"
+    "test": "tsc -p tsconfig.tests.json && node --test .test-build/tests/task-domain.test.js .test-build/tests/task-repository.test.js .test-build/tests/permission-service.test.js .test-build/tests/camera-service.test.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~58.0.15",

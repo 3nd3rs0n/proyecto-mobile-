@@ -35,7 +35,7 @@ function serviceWith(camera: PermissionGateway) {
   const unused = fakeGateway(GRANTED).gateway;
   let settingsOpened = 0;
   const service = createPermissionService({
-    gateways: { camera, mediaLibrary: unused, location: unused },
+    gateways: { camera, location: unused },
     openSettings: async () => {
       settingsOpened += 1;
     },
@@ -100,7 +100,7 @@ test('usa el permiso que corresponde a cada tipo', async () => {
   const camera = fakeGateway(GRANTED);
   const location = fakeGateway(BLOCKED);
   const service = createPermissionService({
-    gateways: { camera: camera.gateway, mediaLibrary: camera.gateway, location: location.gateway },
+    gateways: { camera: camera.gateway, location: location.gateway },
     openSettings: async () => {},
   });
   assert.equal(await service.ensure('location'), 'blocked');

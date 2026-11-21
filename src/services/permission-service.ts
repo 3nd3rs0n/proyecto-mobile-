@@ -1,6 +1,6 @@
 import type { PermissionState } from '../types/device';
 
-export type PermissionKind = 'camera' | 'mediaLibrary' | 'location';
+export type PermissionKind = 'camera' | 'location';
 
 /** Igual a lo que devuelven las librerías de Expo. */
 export type PermissionResponse = { granted: boolean; canAskAgain: boolean };
