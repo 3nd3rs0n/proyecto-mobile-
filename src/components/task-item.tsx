@@ -66,7 +66,7 @@ export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false, 
             hitSlop={4}
           >
             <Text style={[styles.location, task.completed && styles.locationCompleted]}>
-              📍 {describeLocation(location)} · Ver en mapa
+              📍 {describeLocation(location)} · <Text style={styles.mapLink}>Ver en mapa</Text>
             </Text>
           </Pressable>
         )}
@@ -201,6 +201,10 @@ const styles = StyleSheet.create({
   },
   locationCompleted: {
     color: colors.placeholder,
+  },
+  mapLink: {
+    color: colors.primaryText,
+    fontWeight: '600',
   },
   actions: {
     flexDirection: 'row',
