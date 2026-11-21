@@ -114,6 +114,8 @@ Se invirtió el orden (primero el GPS, luego el permiso) y se agregó una prueba
 | 8 | Ubicación bloqueada en Ajustes → aviso con "Abrir Ajustes" | ✅ |
 | 9 | "Abrir Ajustes" abre los Ajustes de la app | ✅ |
 | 10 | Localización del teléfono apagada → "La ubicación del teléfono está desactivada." | ✅ |
+| 11 | Cerrar la app por completo y volver a abrirla conserva la foto de la tarea | ✅ |
+| 12 | Editar una tarea con foto y tomar otra: la tarjeta muestra la nueva | ✅ |
 
 Las pruebas 3 y 9 no tienen captura porque son transiciones (cerrar la cámara, abrir Ajustes): se verificaron en el teléfono, y su lógica está cubierta por las pruebas automáticas "cerrar la cámara sin tomar foto es una cancelación, no un error" y "openSettings abre los Ajustes".
 
