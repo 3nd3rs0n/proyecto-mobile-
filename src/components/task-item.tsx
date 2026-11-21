@@ -1,7 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { cardShadow, colors, fontSize, radius, touchTarget } from '../constants/theme';
-import type { Task } from '../types/task';
+import { describeLocation, mapUrl } from '../domain/task-location';
+import type { Task, TaskLocation } from '../types/task';
 
 type TaskItemProps = {
   task: Task;
@@ -12,7 +13,15 @@ type TaskItemProps = {
   isEditing?: boolean;
 };
 
+function openInMaps(location: TaskLocation) {
+  const url = mapUrl(location, Platform.OS === 'ios' ? 'ios' : 'other');
+  // Si el teléfono no tiene una app de mapas, no hay nada más que hacer.
+  Linking.openURL(url).catch(() => {});
+}
+
 export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false }: TaskItemProps) {
+  const { location } = task;
+
   return (
     <View style={[styles.card, isEditing && styles.cardEditing]}>
       <Pressable
@@ -37,6 +46,24 @@ export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false }
           <Text style={[styles.description, task.completed && styles.descriptionCompleted]}>
             {task.description}
           </Text>
+        )}
+
+        {task.photoUri && (
+          <Image
+            source={{ uri: task.photoUri }}
+            style={styles.photo}
+            accessibilityLabel={`Foto de ${task.title}`}
+          />
+        )}
+        {location && (
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={`Ver en el mapa dónde se creó ${task.title}`}
+            onPress={() => openInMaps(location)}
+            hitSlop={4}
+          >
+            <Text style={styles.location}>📍 {describeLocation(location)} · Ver en mapa</Text>
+          </Pressable>
         )}
 
         {/* Botones con ícono y texto para que se entienda qué hace cada uno. */}
@@ -147,6 +174,18 @@ const styles = StyleSheet.create({
   },
   descriptionCompleted: {
     color: colors.placeholder,
+  },
+    photo: {
+    width: 120,
+    height: 90,
+    marginTop: 6,
+    borderRadius: radius.sm,
+    backgroundColor: colors.track,
+  },
+  location: {
+    marginTop: 4,
+    color: colors.primaryText,
+    fontSize: fontSize.small + 1,
   },
   actions: {
     flexDirection: 'row',

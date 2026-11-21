@@ -98,8 +98,8 @@ test('sin permiso no usa el GPS', async () => {
   }
 });
 
-test('con el GPS apagado informa que no está disponible', async () => {
-  const { service, calls } = serviceWith({ enabled: false });
+test('con el GPS apagado informa que no está disponible, aunque el permiso figure denegado', async () => {
+  const { service, calls } = serviceWith({ enabled: false }, 'blocked');
   const result = await service.getTaskLocation();
   assert.equal(result.status, 'unavailable');
   assert.equal(calls.getCurrent, 0);

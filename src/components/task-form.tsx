@@ -2,43 +2,49 @@ import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { cardShadow, colors, fontSize, radius } from '../constants/theme';
+import { type DeviceServices, useTaskAttachments } from '../hooks/use-task-attachments';
 import type { Task, TaskInput } from '../types/task';
+import { TaskAttachments } from './task-attachments';
 
 type TaskFormProps = {
   onSubmit: (task: TaskInput) => void;
   /** Con una tarea, el formulario pasa a modo edición y se llena con sus datos. */
   editingTask?: Task | null;
   onCancelEdit?: () => void;
+  devices: DeviceServices;
 };
 
-export function TaskForm({ onSubmit, editingTask = null, onCancelEdit }: TaskFormProps) {
+export function TaskForm({ onSubmit, editingTask = null, onCancelEdit, devices }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [focused, setFocused] = useState(false);
   const titleRef = useRef<ComponentRef<typeof TextInput>>(null);
   const descriptionRef = useRef<ComponentRef<typeof TextInput>>(null);
-
+  const attachments = useTaskAttachments(devices);
   const isEditing = editingTask !== null;
   const canSubmit = title.trim().length > 0;
   const editingId = editingTask?.id;
 
   // Al elegir otra tarea para editar (o al salir de la edición) se cargan sus datos.
-  useEffect(() => {
+    useEffect(() => {
     setTitle(editingTask?.title ?? '');
     setDescription(editingTask?.description ?? '');
+    attachments.reset({ photoUri: editingTask?.photoUri, location: editingTask?.location });
     if (editingTask) titleRef.current?.focus();
   }, [editingId]);
 
-  const submit = () => {
+    const submit = () => {
     if (!canSubmit) return;
-    onSubmit({ title, description });
+    onSubmit({ title, description, photoUri: attachments.photoUri, location: attachments.location });
     setTitle('');
     setDescription('');
+    attachments.reset();
   };
 
   const cancel = () => {
     setTitle('');
     setDescription('');
+    attachments.reset();
     onCancelEdit?.();
   };
 
@@ -95,6 +101,8 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit }: TaskFor
         textAlignVertical="top"
         maxLength={300}
       />
+      
+      <TaskAttachments {...attachments} />
 
       <View style={styles.footer}>
         <Text style={styles.hint}>{hint}</Text>

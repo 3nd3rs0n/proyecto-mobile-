@@ -72,13 +72,14 @@ export function createLocationService({
 
   return {
     async getTaskLocation() {
-      const permission = await permissions.ensure('location');
-      if (permission !== 'granted') return { status: 'permission-denied', permission };
-
       try {
+        // Va antes del permiso: con la localización apagada, iOS informa el permiso como denegado.
         if (!(await location.servicesEnabled())) {
           return { status: 'unavailable', reason: 'La ubicación del teléfono está desactivada.' };
         }
+
+        const permission = await permissions.ensure('location');
+        if (permission !== 'granted') return { status: 'permission-denied', permission };
 
         const coordinates = await readCoordinates();
         if (!coordinates) {
