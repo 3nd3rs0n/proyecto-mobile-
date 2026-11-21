@@ -9,7 +9,7 @@ import { FilterBar } from './src/components/filter-bar';
 import { ProgressCard } from './src/components/progress-card';
 import { TaskForm } from './src/components/task-form';
 import { TaskList } from './src/components/task-list';
-import { createTaskId, taskRepositoryFor, legacyTaskMigration } from './src/composition/task-dependencies';
+import { createTaskId, taskAttachments, taskRepositoryFor, legacyTaskMigration } from './src/composition/task-dependencies';
 import { colors, fontSize, radius } from './src/constants/theme';
 import { useTasks } from './src/hooks/use-tasks';
 import { useAuth } from './src/hooks/use-auth';
@@ -106,6 +106,20 @@ function TasksScreen({ user, onLogout, authError }: { user: User; onLogout: () =
     }
   };
 
+  const removeTask = async (id: string) => {
+    const task = tasks.find((item) => item.id === id);
+    if (!await deleteTask(id)) return;
+    if (task?.imageUri) await taskAttachments.photoStorage.remove(task.imageUri);
+  };
+
+  const clearDone = async () => {
+    const photos = tasks
+      .filter((task) => task.completed && task.imageUri)
+      .map((task) => task.imageUri as string);
+    if (!await clearCompleted()) return;
+    await Promise.all(photos.map((uri) => taskAttachments.photoStorage.remove(uri)));
+  };
+
   const filters: { id: TaskFilter; label: string; count: number }[] = [
     { id: 'all', label: 'Todas', count: tasks.length },
     { id: 'active', label: 'Pendientes', count: pendingCount },
@@ -189,6 +203,7 @@ function TasksScreen({ user, onLogout, authError }: { user: User; onLogout: () =
                   onSubmit={submitTask}
                   editingTask={editingTask}
                   onCancelEdit={() => setEditingId(null)}
+                  attachments={taskAttachments}
                 />
               </View>
 
@@ -198,7 +213,7 @@ function TasksScreen({ user, onLogout, authError }: { user: User; onLogout: () =
                 selected={filter}
                 onSelect={setFilter}
                 completedCount={completedCount}
-                onClearCompleted={clearCompleted}
+                onClearCompleted={clearDone}
               />
 
               <TaskList
@@ -206,7 +221,7 @@ function TasksScreen({ user, onLogout, authError }: { user: User; onLogout: () =
                 tasks={visibleTasks}
                 totalCount={tasks.length}
                 onToggle={toggleTask}
-                onDelete={deleteTask}
+                onDelete={removeTask}
                 onEdit={startEditing}
                 editingId={editingTask?.id ?? null}
               />

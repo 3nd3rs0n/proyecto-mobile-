@@ -16,3 +16,27 @@ export interface PermissionService {
   ensure(kind: PermissionKind): Promise<PermissionState>;
   openSettings(): Promise<void>;
 }
+
+export type PermissionGatewayMap = Record<PermissionKind, PermissionGateway>;
+
+const toState = (response: PermissionResponse): PermissionState =>
+  response.granted ? 'granted' : response.canAskAgain ? 'denied' : 'blocked';
+
+export function createPermissionService(
+  gateways: PermissionGatewayMap,
+  openSettings: () => Promise<void>,
+): PermissionService {
+  return {
+    async check(kind) {
+      return toState(await gateways[kind].check());
+    },
+    async ensure(kind) {
+      const gateway = gateways[kind];
+      const current = await gateway.check();
+      if (current.granted) return 'granted';
+      if (!current.canAskAgain) return 'blocked';
+      return toState(await gateway.request());
+    },
+    openSettings,
+  };
+}

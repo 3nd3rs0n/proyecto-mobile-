@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { cardShadow, colors, fontSize, radius, touchTarget } from '../constants/theme';
 import type { Task } from '../types/task';
@@ -38,6 +38,21 @@ export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false, 
         {task.description.length > 0 && (
           <Text style={[styles.description, task.completed && styles.descriptionCompleted]}>
             {task.description}
+          </Text>
+        )}
+
+        {task.imageUri && (
+          <Image
+            source={{ uri: task.imageUri }}
+            style={[styles.photo, task.completed && styles.photoCompleted]}
+            accessibilityLabel={`Foto de ${task.title}`}
+          />
+        )}
+
+        {task.location && (
+          <Text style={[styles.location, task.completed && styles.locationCompleted]}>
+            {task.location.address
+              ?? `${task.location.latitude.toFixed(5)}, ${task.location.longitude.toFixed(5)}`}
           </Text>
         )}
 
@@ -151,6 +166,25 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   descriptionCompleted: {
+    color: colors.placeholder,
+  },
+  photo: {
+    width: '100%',
+    height: 160,
+    marginTop: 6,
+    borderRadius: radius.sm,
+    backgroundColor: colors.borderSoft,
+  },
+  photoCompleted: {
+    opacity: 0.6,
+  },
+  location: {
+    marginTop: 4,
+    color: colors.textSubtle,
+    fontSize: fontSize.small,
+    lineHeight: 18,
+  },
+  locationCompleted: {
     color: colors.placeholder,
   },
   actions: {
