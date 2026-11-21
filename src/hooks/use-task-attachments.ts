@@ -1,35 +1,54 @@
 import { useRef, useState } from 'react';
 
+import type { TaskAttachments } from '../composition/task-dependencies';
 import { describeDeviceProblem, type DeviceNotice } from '../domain/device-notice';
-import type { CameraService } from '../services/camera-service';
-import type { LocationService } from '../services/location-service';
-import type { PermissionService } from '../services/permission-service';
 import type { TaskInput } from '../types/task';
 
-export type DeviceServices = {
-  camera: CameraService;
-  location: LocationService;
-  permissions: PermissionService;
-};
-
-type Attachments = Pick<TaskInput, 'photoUri' | 'location'>;
+type Attachments = Pick<TaskInput, 'imageUri' | 'location'>;
 
 export type TaskAttachmentsState = ReturnType<typeof useTaskAttachments>;
 
-/** Foto y ubicación del formulario, y el aviso cuando un periférico no se pudo usar. */
-export function useTaskAttachments({ camera, location: locator, permissions }: DeviceServices) {
-  const [photoUri, setPhotoUri] = useState<string>();
+/**
+ * Foto y ubicación del formulario, y el aviso cuando un periférico no se pudo usar.
+ * La foto se copia a la carpeta permanente apenas se elige; las fotos que no se guardan se borran.
+ */
+export function useTaskAttachments({
+  camera,
+  location: locator,
+  permissions,
+  photoStorage,
+  createFileId,
+}: TaskAttachments) {
+  const [imageUri, setImageUri] = useState<string>();
   const [location, setLocation] = useState<Attachments['location']>();
+  const [original, setOriginal] = useState<Attachments>({});
+  const [savingPhoto, setSavingPhoto] = useState(false);
   const [locating, setLocating] = useState(false);
   const [notice, setNotice] = useState<DeviceNotice | null>(null);
   // Cada búsqueda tiene un número; si el formulario se reinicia, la respuesta atrasada se ignora.
   const locationRequest = useRef(0);
 
+  /** Borra la foto actual si se adjuntó en este formulario (no la de la tarea guardada). */
+  const discardNewPhoto = async (uri = imageUri) => {
+    if (uri && uri !== original.imageUri) await photoStorage.remove(uri);
+  };
+
   const choosePhoto = async (source: 'camera' | 'gallery') => {
     setNotice(null);
     const result = source === 'camera' ? await camera.takePhoto() : await camera.pickFromLibrary();
-    if (result.status === 'ok') setPhotoUri(result.value.uri);
     setNotice(describeDeviceProblem(result, source));
+    if (result.status !== 'ok') return;
+
+    setSavingPhoto(true);
+    try {
+      const saved = await photoStorage.persist(result.value.uri, createFileId());
+      await discardNewPhoto();
+      setImageUri(saved);
+    } catch {
+      setNotice({ message: 'No se pudo guardar la foto en el teléfono.', canOpenSettings: false });
+    } finally {
+      setSavingPhoto(false);
+    }
   };
 
   const addLocation = async () => {
@@ -44,19 +63,34 @@ export function useTaskAttachments({ camera, location: locator, permissions }: D
     setNotice(describeDeviceProblem(result, 'location'));
   };
 
+  // Una tarea guardada no puede quedar sin foto o sin ubicación: "Quitar" vuelve a la original.
+  const removePhoto = async () => {
+    await discardNewPhoto();
+    setImageUri(original.imageUri);
+  };
+
   const removeLocation = () => {
     locationRequest.current += 1;
     setLocating(false);
-    setLocation(undefined);
+    setLocation(original.location);
   };
 
   const reset = (initial: Attachments = {}) => {
     locationRequest.current += 1;
-    setPhotoUri(initial.photoUri);
+    setOriginal(initial);
+    setImageUri(initial.imageUri);
     setLocation(initial.location);
     setLocating(false);
     setNotice(null);
   };
+
+  /** Después de guardar la tarea: la foto reemplazada ya no se usa. */
+  const commit = async () => {
+    if (original.imageUri && original.imageUri !== imageUri) await photoStorage.remove(original.imageUri);
+  };
+
+  /** Al cancelar: la foto nueva no se usó. */
+  const discard = () => discardNewPhoto();
 
   const openSettings = () => {
     permissions.openSettings().catch(() => {
@@ -65,17 +99,22 @@ export function useTaskAttachments({ camera, location: locator, permissions }: D
   };
 
   return {
-    photoUri,
+    imageUri,
     location,
+    savingPhoto,
     locating,
     notice,
+    canRemovePhoto: imageUri !== undefined && imageUri !== original.imageUri,
+    canRemoveLocation: location !== undefined && location !== original.location,
     takePhoto: () => choosePhoto('camera'),
     pickPhoto: () => choosePhoto('gallery'),
-    removePhoto: () => setPhotoUri(undefined),
+    removePhoto,
     addLocation,
     removeLocation,
     openSettings,
     dismissNotice: () => setNotice(null),
     reset,
+    commit,
+    discard,
   };
 }

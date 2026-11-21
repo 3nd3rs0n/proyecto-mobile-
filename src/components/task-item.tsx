@@ -11,6 +11,7 @@ type TaskItemProps = {
   onEdit: (id: string) => void;
   /** Resalta la tarjeta mientras su tarea está en el formulario. */
   isEditing?: boolean;
+  disabled?: boolean;
 };
 
 function openInMaps(location: TaskLocation) {
@@ -19,7 +20,7 @@ function openInMaps(location: TaskLocation) {
   Linking.openURL(url).catch(() => {});
 }
 
-export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false }: TaskItemProps) {
+export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false, disabled = false }: TaskItemProps) {
   const { location } = task;
 
   return (
@@ -29,7 +30,8 @@ export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false }
         accessibilityLabel={
           task.completed ? `Marcar ${task.title} como pendiente` : `Completar ${task.title}`
         }
-        accessibilityState={{ checked: task.completed }}
+        accessibilityState={{ checked: task.completed, disabled }}
+        disabled={disabled}
         onPress={() => onToggle(task.id)}
         style={styles.toggle}
       >
@@ -48,13 +50,14 @@ export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false }
           </Text>
         )}
 
-        {task.photoUri && (
+        {task.imageUri && (
           <Image
-            source={{ uri: task.photoUri }}
-            style={styles.photo}
+            source={{ uri: task.imageUri }}
+            style={[styles.photo, task.completed && styles.photoCompleted]}
             accessibilityLabel={`Foto de ${task.title}`}
           />
         )}
+
         {location && (
           <Pressable
             accessibilityRole="link"
@@ -62,7 +65,9 @@ export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false }
             onPress={() => openInMaps(location)}
             hitSlop={4}
           >
-            <Text style={styles.location}>📍 {describeLocation(location)} · Ver en mapa</Text>
+            <Text style={[styles.location, task.completed && styles.locationCompleted]}>
+              📍 {describeLocation(location)} · Ver en mapa
+            </Text>
           </Pressable>
         )}
 
@@ -71,7 +76,8 @@ export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false }
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Editar ${task.title}`}
-            accessibilityState={{ selected: isEditing }}
+            accessibilityState={{ selected: isEditing, disabled }}
+            disabled={disabled}
             onPress={() => onEdit(task.id)}
             hitSlop={4}
             style={({ pressed }) => [
@@ -92,6 +98,8 @@ export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false }
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Eliminar ${task.title}`}
+            accessibilityState={{ disabled }}
+            disabled={disabled}
             onPress={() => onDelete(task.id)}
             hitSlop={4}
             style={({ pressed }) => [
@@ -175,17 +183,24 @@ const styles = StyleSheet.create({
   descriptionCompleted: {
     color: colors.placeholder,
   },
-    photo: {
-    width: 120,
-    height: 90,
+  photo: {
+    width: '100%',
+    height: 160,
     marginTop: 6,
     borderRadius: radius.sm,
-    backgroundColor: colors.track,
+    backgroundColor: colors.borderSoft,
+  },
+  photoCompleted: {
+    opacity: 0.6,
   },
   location: {
     marginTop: 4,
-    color: colors.primaryText,
-    fontSize: fontSize.small + 1,
+    color: colors.textSubtle,
+    fontSize: fontSize.small,
+    lineHeight: 18,
+  },
+  locationCompleted: {
+    color: colors.placeholder,
   },
   actions: {
     flexDirection: 'row',

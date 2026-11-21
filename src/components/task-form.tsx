@@ -1,50 +1,63 @@
 import { type ComponentRef, useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import type { TaskAttachments as TaskAttachmentServices } from '../composition/task-dependencies';
 import { cardShadow, colors, fontSize, radius } from '../constants/theme';
-import { type DeviceServices, useTaskAttachments } from '../hooks/use-task-attachments';
+import { useTaskAttachments } from '../hooks/use-task-attachments';
 import type { Task, TaskInput } from '../types/task';
 import { TaskAttachments } from './task-attachments';
 
 type TaskFormProps = {
-  onSubmit: (task: TaskInput) => void;
+  onSubmit: (task: TaskInput) => Promise<boolean>;
+  disabled?: boolean;
   /** Con una tarea, el formulario pasa a modo edición y se llena con sus datos. */
   editingTask?: Task | null;
   onCancelEdit?: () => void;
-  devices: DeviceServices;
+  attachments: TaskAttachmentServices;
 };
 
-export function TaskForm({ onSubmit, editingTask = null, onCancelEdit, devices }: TaskFormProps) {
+export function TaskForm({ onSubmit, editingTask = null, onCancelEdit, attachments, disabled = false }: TaskFormProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [focused, setFocused] = useState(false);
   const titleRef = useRef<ComponentRef<typeof TextInput>>(null);
   const descriptionRef = useRef<ComponentRef<typeof TextInput>>(null);
-  const attachments = useTaskAttachments(devices);
+  const files = useTaskAttachments(attachments);
+
   const isEditing = editingTask !== null;
-  const canSubmit = title.trim().length > 0;
+  const canSubmit = !disabled && !files.savingPhoto && title.trim().length > 0;
   const editingId = editingTask?.id;
 
   // Al elegir otra tarea para editar (o al salir de la edición) se cargan sus datos.
-    useEffect(() => {
+  useEffect(() => {
     setTitle(editingTask?.title ?? '');
     setDescription(editingTask?.description ?? '');
-    attachments.reset({ photoUri: editingTask?.photoUri, location: editingTask?.location });
+    files.reset({ imageUri: editingTask?.imageUri, location: editingTask?.location });
     if (editingTask) titleRef.current?.focus();
   }, [editingId]);
 
-    const submit = () => {
-    if (!canSubmit) return;
-    onSubmit({ title, description, photoUri: attachments.photoUri, location: attachments.location });
+  const reset = () => {
     setTitle('');
     setDescription('');
-    attachments.reset();
+    files.reset();
   };
 
-  const cancel = () => {
-    setTitle('');
-    setDescription('');
-    attachments.reset();
+  const submit = async () => {
+    if (!canSubmit) return;
+    const saved = await onSubmit({
+      title,
+      description,
+      imageUri: files.imageUri,
+      location: files.location,
+    });
+    if (!saved) return;
+    await files.commit();
+    reset();
+  };
+
+  const cancel = async () => {
+    await files.discard();
+    reset();
     onCancelEdit?.();
   };
 
@@ -60,7 +73,8 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit, devices }
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Cancelar edición"
-            onPress={cancel}
+            disabled={disabled}
+            onPress={() => void cancel()}
             hitSlop={8}
             style={styles.cancelButton}
           >
@@ -71,6 +85,7 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit, devices }
 
       <TextInput
         ref={titleRef}
+        editable={!disabled}
         accessibilityLabel="Título de la tarea"
         style={styles.titleInput}
         value={title}
@@ -89,6 +104,7 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit, devices }
 
       <TextInput
         ref={descriptionRef}
+        editable={!disabled}
         accessibilityLabel="Descripción de la tarea"
         style={styles.descriptionInput}
         value={description}
@@ -101,8 +117,8 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit, devices }
         textAlignVertical="top"
         maxLength={300}
       />
-      
-      <TaskAttachments {...attachments} />
+
+      <TaskAttachments {...files} disabled={disabled} />
 
       <View style={styles.footer}>
         <Text style={styles.hint}>{hint}</Text>
@@ -111,7 +127,7 @@ export function TaskForm({ onSubmit, editingTask = null, onCancelEdit, devices }
           accessibilityLabel={isEditing ? 'Guardar cambios' : 'Añadir tarea'}
           accessibilityState={{ disabled: !canSubmit }}
           disabled={!canSubmit}
-          onPress={submit}
+          onPress={() => void submit()}
           style={({ pressed }) => [
             styles.addButton,
             !canSubmit && styles.addButtonDisabled,

@@ -42,6 +42,33 @@ test('editar permite borrar la descripción', () => {
   assert.equal(updateTask(tasks, 'demo-3', { title: 'Terminar', description: '   ' })[2].description, '');
 });
 
+test('crear y editar aceptan el alias de foto heredado y producen solo imageUri', () => {
+  const input = { title: 'Foto', description: '', photoUri: 'file:///old.jpg' };
+  const task = createTask(input, () => 'photo')!;
+  assert.equal(task.imageUri, input.photoUri);
+  assert.equal('photoUri' in task, false);
+  const oldInput = { ...input, photoUri: 'file:///new.jpg' };
+  const [edited] = updateTask([task], task.id, oldInput);
+  assert.equal(edited.imageUri, 'file:///new.jpg');
+  assert.equal('photoUri' in edited, false);
+  const noReplacement = { ...input, photoUri: undefined };
+  assert.equal(updateTask([edited], edited.id, noReplacement)[0].imageUri, edited.imageUri);
+});
+
+test('editar texto no pierde fecha, foto ni ningún campo GPS y no admite propietario del formulario', () => {
+  const location = { latitude: -33.45, longitude: -70.66, accuracy: null, address: null,
+    capturedAt: 1_700_000_000_123, altitude: 100, altitudeAccuracy: 8, heading: -1, speed: null };
+  const task: Task = { id: 'gps', title: 'Original', description: '', completed: false, userId: 'A',
+    imageUri: 'file:///A/photo.jpg', createdAt: '2026-11-21T00:00:00.000Z', location };
+  const input = { title: 'Editada', description: 'Detalle', userId: 'B', createdAt: 'otra-fecha' };
+  const [edited] = updateTask([task], task.id, input);
+  assert.equal(edited.userId, 'A');
+  assert.equal(edited.createdAt, task.createdAt);
+  assert.equal(edited.imageUri, task.imageUri);
+  assert.deepEqual(edited.location, location);
+  assert.deepEqual(task.location, location);
+});
+
 test('editar con título vacío o id inexistente no cambia nada', () => {
   assert.deepEqual(updateTask(tasks, 'demo-1', { title: '  ', description: 'Algo' }), tasks);
   assert.deepEqual(updateTask(tasks, 'missing', { title: 'Nuevo', description: '' }), tasks);

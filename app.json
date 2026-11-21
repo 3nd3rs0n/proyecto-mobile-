@@ -13,6 +13,7 @@
       "package": "com.example.todolist"
     },
     "plugins": [
+      "expo-secure-store",
       [
         "expo-image-picker",
         {

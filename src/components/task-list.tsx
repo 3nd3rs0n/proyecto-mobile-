@@ -12,6 +12,7 @@ type TaskListProps = {
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
   editingId?: string | null;
+  disabled?: boolean;
 };
 
 export function TaskList({
@@ -21,6 +22,7 @@ export function TaskList({
   onDelete,
   onEdit,
   editingId = null,
+  disabled = false,
 }: TaskListProps) {
   if (tasks.length === 0) {
     return <EmptyState listIsEmpty={totalCount === 0} />;
@@ -31,6 +33,7 @@ export function TaskList({
       {tasks.map((task) => (
         <TaskItem
           key={task.id}
+          disabled={disabled}
           task={task}
           onToggle={onToggle}
           onDelete={onDelete}

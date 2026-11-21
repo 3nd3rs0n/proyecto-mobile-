@@ -4,11 +4,16 @@ import { colors, fontSize, radius, touchTarget } from '../constants/theme';
 import { describeLocation } from '../domain/task-location';
 import type { TaskAttachmentsState } from '../hooks/use-task-attachments';
 
+type TaskAttachmentsProps = TaskAttachmentsState & { disabled?: boolean };
+
 export function TaskAttachments({
-  photoUri,
+  imageUri,
   location,
+  savingPhoto,
   locating,
   notice,
+  canRemovePhoto,
+  canRemoveLocation,
   takePhoto,
   pickPhoto,
   removePhoto,
@@ -16,21 +21,31 @@ export function TaskAttachments({
   removeLocation,
   openSettings,
   dismissNotice,
-}: TaskAttachmentsState) {
+  disabled = false,
+}: TaskAttachmentsProps) {
+  const busy = disabled || savingPhoto;
+
   return (
     <View style={styles.container}>
       <View style={styles.buttons}>
-        <AttachButton icon="📷" label="Cámara" onPress={takePhoto} />
-        <AttachButton icon="🖼️" label="Galería" onPress={pickPhoto} />
+        <AttachButton icon="📷" label="Cámara" onPress={takePhoto} disabled={busy} />
+        <AttachButton icon="🖼️" label="Galería" onPress={pickPhoto} disabled={busy} />
         {!location && !locating && (
-          <AttachButton icon="📍" label="Ubicación" onPress={addLocation} />
+          <AttachButton icon="📍" label="Ubicación" onPress={addLocation} disabled={disabled} />
         )}
       </View>
 
-      {photoUri && (
+      {savingPhoto && (
+        <View style={styles.locationRow}>
+          <ActivityIndicator color={colors.primary} />
+          <Text style={styles.locationText}>Guardando la foto…</Text>
+        </View>
+      )}
+
+      {imageUri && (
         <View style={styles.photoRow}>
-          <Image source={{ uri: photoUri }} style={styles.photo} accessibilityLabel="Foto adjunta" />
-          <RemoveButton label="Quitar foto" onPress={removePhoto} />
+          <Image source={{ uri: imageUri }} style={styles.photo} accessibilityLabel="Foto adjunta" />
+          {canRemovePhoto && <RemoveButton label="Quitar foto" onPress={() => void removePhoto()} />}
         </View>
       )}
 
@@ -47,7 +62,7 @@ export function TaskAttachments({
           <Text style={styles.locationText} numberOfLines={2}>
             📍 {describeLocation(location)}
           </Text>
-          <RemoveButton label="Quitar" onPress={removeLocation} />
+          {canRemoveLocation && <RemoveButton label="Quitar" onPress={removeLocation} />}
         </View>
       )}
 
@@ -70,13 +85,21 @@ export function TaskAttachments({
   );
 }
 
-function AttachButton({ icon, label, onPress }: { icon: string; label: string; onPress: () => void }) {
+type AttachButtonProps = { icon: string; label: string; onPress: () => void; disabled: boolean };
+
+function AttachButton({ icon, label, onPress, disabled }: AttachButtonProps) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`Adjuntar desde ${label.toLowerCase()}`}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.attachButton, pressed && styles.pressed]}
+      style={({ pressed }) => [
+        styles.attachButton,
+        disabled && styles.disabled,
+        pressed && styles.pressed,
+      ]}
     >
       <Text style={styles.attachIcon}>{icon}</Text>
       <Text style={styles.attachLabel}>{label}</Text>
@@ -116,6 +139,9 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.7,
+  },
+  disabled: {
+    opacity: 0.5,
   },
   attachIcon: {
     fontSize: fontSize.body,

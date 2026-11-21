@@ -21,7 +21,7 @@ export const APPROXIMATE_ACCURACY_M = 500;
 
 export function describeLocation({ latitude, longitude, accuracy, address }: TaskLocation): string {
   const place = address ?? `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
-  return accuracy !== null && accuracy > APPROXIMATE_ACCURACY_M ? `${place} (aprox.)` : place;
+  return accuracy != null && accuracy > APPROXIMATE_ACCURACY_M ? `${place} (aprox.)` : place;
 }
 
 export function mapUrl({ latitude, longitude }: TaskLocation, platform: 'ios' | 'other'): string {
