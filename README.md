@@ -1,16 +1,10 @@
 # Paso a paso — Lista de tareas en React Native
 
-**Actualización Unidad 2:** registro, login, logout y sesión local persistente; tareas separadas por usuario e importación explícita de datos antiguos. Consulta [implementación, pruebas y contratos de integración](docs/UNIDAD_2.md).
+Proyecto académico desarrollado por tres integrantes. La To-Do List de la Unidad 1 evolucionó en la Unidad 2 para incorporar fotografías, ubicación, permisos, almacenamiento local y cuentas de usuario, conservando la gestión de tareas existente.
 
-La autenticación se ejecuta con Expo Go en Android/iOS y requiere SecureStore. La versión web no ofrece autenticación local. Para las herramientas se recomienda Node 22.12 o superior (verificado con Node 24.11.0).
+Consulta la [entrega de Unidad 2](#unidad-2--entrega-final) y el [informe original de Unidad 1](#informe-original-de-la-unidad-1).
 
-La auditoría actual conserva los parámetros criptográficos, reduce trabajo redundante y permite medir por etapas en Expo Go con `EXPO_PUBLIC_AUTH_DIAGNOSTICS=1`. Consulta las [mediciones de Node y el diagnóstico en dispositivo](docs/UNIDAD_2.md#diagnóstico-en-expo-go); los tiempos en un teléfono siguen pendientes. La suite actual tiene 64 pruebas.
-
-Después de integrar `main`, las tareas usan `imageUri`, `createdAt` en ISO UTC y un único modelo GPS compatible con los datos anteriores. Consulta la [integración y los respaldos de metadatos](docs/UNIDAD_2.md#integración-después-de-git-pull-y-stash-pop). El código integrado de cámara, fotos, permisos y GPS contiene contratos y dependencias; la captura y sus adaptadores nativos todavía no están implementados.
-
-El informe siguiente documenta la entrega original de Unidad 1; el estado actual y las pruebas de Unidad 2 están en el documento enlazado.
-
-**Evaluación Unidad 1 · Desarrollo de Aplicaciones Móviles · Instituto Profesional San Sebastián**
+**Evaluaciones Unidades 1 y 2 · Desarrollo de Aplicaciones Móviles · Instituto Profesional San Sebastián**
 
 | Dato | Detalle |
 |---|---|
@@ -33,7 +27,137 @@ Aplicación móvil para registrar y visualizar una lista de tareas pendientes. C
 
 ---
 
-## Índice
+## Unidad 2 — Entrega final
+
+La evaluación se centra en las **APIs internas del dispositivo y las funcionalidades locales**. La aplicación utiliza cámara, GPS, permisos y archivos del teléfono; no incorpora un backend ni consume APIs externas o servicios web como parte de la evaluación.
+
+### Integrante 1 — Periféricos del dispositivo
+
+- Implementó la captura con cámara y la selección desde la galería, con vista previa y asociación de la fotografía a la tarea.
+- Integró GPS para registrar coordenadas, precisión y momento de captura. La tarea muestra la dirección cuando está disponible o las coordenadas, con acceso a la aplicación de mapas del dispositivo.
+- Gestionó permisos de cámara y ubicación, cancelaciones, permisos bloqueados y acceso a Ajustes. Ante demora o error del GPS, se utiliza la última ubicación conocida si es reciente; si falla la dirección, se conservan las coordenadas.
+- Incorporó pruebas automatizadas de cámara, permisos, ubicación y mensajes de error mediante simulaciones de las APIs nativas.
+
+### Integrante 2 — Almacenamiento local
+
+- Implementó la persistencia y recuperación de tareas mediante AsyncStorage, incluyendo título, descripción, estado, referencia de fotografía y ubicación asociada.
+- Guardó las fotografías en la carpeta de documentos de la aplicación con FileSystem, conservando su referencia como `imageUri` en la tarea. Se gestionó la limpieza de fotografías nuevas descartadas, reemplazadas y de tareas eliminadas.
+- Conservó la edición, eliminación, cambio de estado, filtros y progreso. Los cambios se confirman después de guardarse y los errores no limpian el formulario antes de tiempo.
+- Incorporó pruebas de almacenamiento, copia de fotografías, datos antiguos, respaldos, metadatos GPS y fallos de lectura/escritura.
+
+Una vez cargada la app, las cuentas, las tareas y las fotografías guardadas se gestionan localmente sin conexión a Internet. La carga del proyecto en Expo Go requiere acceso al servidor Metro; la obtención de una dirección legible y la apertura de mapas dependen de los servicios disponibles en el teléfono.
+
+### Integrante 3 — Autenticación e integración
+
+- Implementó registro con validaciones, inicio y cierre de sesión, rechazo de correos duplicados y botones para mostrar u ocultar las contraseñas.
+- Persistió la sesión y las credenciales derivadas en SecureStore; las contraseñas no se guardan en texto plano. La sesión se recupera al abrir la app y las tareas se conservan al cerrarla.
+- Separó las tareas por usuario y bloqueó operaciones sobre tareas de otra cuenta o de una sesión cerrada.
+- Integró formulario, periféricos y persistencia con un modelo común: `imageUri`, `createdAt` en ISO UTC y `TaskLocation`. Conservó compatibilidad con `photoUri` y fechas numéricas antiguas, con respaldo previo a su normalización. La importación de tareas de Unidad 1 requiere confirmación de propiedad.
+- Incorporó pruebas generales de autenticación, recuperación de sesión, cambio de usuario, aislamiento, integración de fotos/GPS y manejo de errores.
+
+### Tecnologías y dependencias utilizadas
+
+| Tecnología o dependencia | Uso en el proyecto |
+|---|---|
+| React Native 0.88, React 19.3, Expo SDK 58 y TypeScript 6 | Aplicación móvil y comprobación de tipos. |
+| `expo-image-picker` | Cámara y selección de fotografías. |
+| `expo-location` | Permisos, GPS y resolución de direcciones del sistema. |
+| `expo-file-system` | Copia y eliminación de archivos locales de fotografías. |
+| `@react-native-async-storage/async-storage` | Perfiles públicos, tareas y metadatos persistidos. |
+| `expo-secure-store` | Credenciales derivadas, clave local y sesión. |
+| `expo-crypto` y `@noble/hashes` | UUID, aleatoriedad y derivación/verificación de contraseñas. |
+| `react-native-safe-area-context` y `expo-status-bar` | Área segura y barra de estado de la interfaz. |
+| `node:test` y `node:assert` | Pruebas automatizadas, sin agregar un framework de pruebas. |
+
+Las versiones declaradas se encuentran en `package.json`. La autenticación está orientada a Expo Go en Android/iOS y requiere SecureStore; no se ofrece ese flujo en la versión web.
+
+### Instalación, ejecución y pruebas
+
+Las instrucciones y comandos actualizados están en [Cómo ejecutar la app](#2-cómo-ejecutar-la-app). La suite actual se organiza así:
+
+| Archivos de pruebas | Cobertura |
+|---|---|
+| `camera-service.test.ts`, `permission-service.test.ts`, `location-service.test.ts`, `device-notice.test.ts` | Captura, cancelaciones, permisos, GPS, coordenadas, direcciones y avisos. |
+| `attachments.test.ts` | Copia de imágenes a almacenamiento permanente y errores de archivos. |
+| `task-domain.test.ts`, `task-repository.test.ts` | Operaciones de tareas, persistencia, normalización de datos y respaldos. |
+| `auth.test.ts`, `user-tasks.test.ts` | Cuentas, sesión, aislamiento por usuario e integración con fotografías y ubicaciones. |
+
+Todos están en `tests/`. Las pruebas automatizadas usan almacenamiento y periféricos simulados; no sustituyen la comprobación física de cámara, permisos y GPS en Expo Go. Esta actualización documental no atribuye nuevos resultados de ejecución a la suite.
+
+Para la comprobación en teléfono: crear dos cuentas, adjuntar una foto y ubicación a una tarea, editarla, reiniciar la app, cambiar de usuario y comprobar que cada cuenta conserve sus datos. Probar también cancelar la captura, denegar permisos y gestionar tareas guardadas sin conexión externa.
+
+### Estado final de implementación
+
+- [x] Cámara, galería, fotografías asociadas y gestión de permisos integradas en el formulario.
+- [x] Registro y visualización de ubicación GPS en las tareas.
+- [x] Persistencia local de tareas, fotografías y ubicaciones.
+- [x] Edición, eliminación, estado, filtros y progreso conservados desde Unidad 1.
+- [x] Registro, inicio/cierre de sesión y recuperación de sesión implementados.
+- [x] Datos separados por usuario y compatibilidad con tareas antiguas.
+- [x] Pruebas automatizadas de periféricos, almacenamiento y autenticación incluidas.
+- [x] Evaluación enfocada en el dispositivo y los datos locales, sin backend ni APIs externas propias.
+
+---
+
+## Capturas de pantalla — Unidad 2
+
+### Periféricos del dispositivo
+
+<table>
+  <tr>
+    <th>Permiso de cámara</th>
+    <th>Permiso de ubicación</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/capturas/eva2/08-permiso-camara.jpeg" width="220" alt="Solicitud de permiso para usar la cámara en Expo Go"></td>
+    <td align="center"><img src="docs/capturas/eva2/10-permiso-ubicacion.jpeg" width="220" alt="Solicitud de acceso a la ubicación mientras se usa la aplicación"></td>
+  </tr>
+  <tr>
+    <th>Cámara bloqueada: acceso a Ajustes</th>
+    <th>Ubicación bloqueada: acceso a Ajustes</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/capturas/eva2/11-camara-bloqueada.jpeg" width="220" alt="Aviso de permiso de cámara bloqueado con botón Abrir Ajustes"></td>
+    <td align="center"><img src="docs/capturas/eva2/12-ubicacion-bloqueada.jpeg" width="220" alt="Aviso de permiso de ubicación bloqueado con botón Abrir Ajustes"></td>
+  </tr>
+</table>
+
+### Almacenamiento local
+
+**Edición de una tarea con fotografía y ubicación asociadas.** La captura muestra el formulario y sus datos adjuntos; no representa por sí sola una prueba de recuperación tras reiniciar.
+
+<p align="center">
+  <img src="docs/capturas/eva2/09-foto-y-ubicacion.jpeg" width="220" alt="Formulario de edición de una tarea con fotografía, ubicación y botón Guardar">
+</p>
+
+### Autenticación e integración
+
+<table>
+  <tr>
+    <th>Inicio de sesión</th>
+    <th>Registro de usuario</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/eva2/13-inicio-de-sesion.jfif" width="220" alt="Formulario de inicio de sesión con control para mostrar u ocultar la contraseña"></td>
+    <td align="center"><img src="docs/eva2/14-crear-cuenta.jfif" width="220" alt="Registro con nombre, correo, contraseña y confirmación"></td>
+  </tr>
+  <tr>
+    <th>Validación de inicio de sesión</th>
+    <th>Validación de registro</th>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/eva2/15-inicio-de-sesion-fallido-o-error.jfif" width="220" alt="Mensaje Completa el correo y la contraseña al enviar el inicio de sesión vacío"></td>
+    <td align="center"><img src="docs/eva2/16-crear-cuenta-fallida-o-error.jfif" width="220" alt="Mensaje Completa todos los campos al enviar el registro vacío"></td>
+  </tr>
+</table>
+
+---
+
+## Informe original de la Unidad 1
+
+Se conserva el desarrollo original, su arquitectura, integrantes y capturas. Las 18 pruebas y los resultados manuales de las secciones siguientes corresponden a esa entrega; las instrucciones de ejecución se actualizaron para la aplicación actual.
+
+## Índice del informe de Unidad 1
 
 1. [Por qué React Native](#1-por-qué-react-native)
 2. [Cómo ejecutar la app](#2-cómo-ejecutar-la-app)
@@ -47,7 +171,7 @@ Aplicación móvil para registrar y visualizar una lista de tareas pendientes. C
 10. [Capturas de pantalla](#10-capturas-de-pantalla)
 11. [Trabajo en equipo](#11-trabajo-en-equipo)
 12. [Uso de agentes de IA](#12-uso-de-agentes-de-ia)
-13. [Próximos pasos](#13-próximos-pasos)
+13. [Cierre de la Unidad 1](#13-cierre-de-la-unidad-1)
 
 ---
 
@@ -74,16 +198,18 @@ El enunciado propone Ionic, pero el docente autorizó cualquier framework, siemp
 
 ## 2. Cómo ejecutar la app
 
-**Requisitos:** Node.js 20 o superior, npm, y Expo Go en el teléfono (o un emulador de Android Studio).
+**Requisitos:** Node.js 22.12 o superior, npm y Expo Go compatible con SDK 58 en Android/iOS. El desarrollo se ha realizado con Node 24.11.0.
 
 ```bash
-npm install
+npm ci
 npm start
 ```
 
-- **Teléfono físico:** escanear el código QR con Expo Go. El teléfono y el computador deben estar en la misma red Wi-Fi.
-- **Emulador Android:** con el emulador de Android Studio abierto, ejecutar `npm run android`.
-- **Proyecto nativo:** se genera con `npx expo prebuild --platform android`.
+- **Teléfono físico:** conectar teléfono y computador a la misma red Wi-Fi y abrir el QR con Expo Go en Android o la cámara en iOS. Autorizar cámara y ubicación cuando se soliciten.
+- **Emulador Android:** abrir el emulador con Expo Go instalado y presionar `a` en la terminal de Expo. Para comprobar cámara y GPS se recomienda un teléfono físico.
+- **Recargar sin caché:** ejecutar `npx expo start --clear` si Metro conserva una versión anterior.
+
+`npm run android` y `npm run ios` son alternativas para compilar proyectos nativos; no son necesarias para usar Expo Go.
 
 **Revisar tipos y ejecutar las pruebas:**
 
@@ -196,7 +322,7 @@ export interface TaskRepository {
 }
 ```
 
-Si en la Unidad 3 las tareas pasan a una API, se crea otro repositorio que cumpla este contrato y el resto de la app no cambia.
+Este contrato permite mantener las reglas de tareas independientes de la implementación del almacenamiento local.
 
 ### 6.3 Inyección de dependencias y raíz de composición
 `useTasks` **recibe** el repositorio y el generador de ids en vez de crearlos. Se configuran en un solo lugar, `src/composition/task-dependencies.ts`:
@@ -345,9 +471,6 @@ Las decisiones técnicas, la revisión del código y las pruebas fueron nuestras
 
 ---
 
-## 13. Próximos pasos
+## 13. Cierre de la Unidad 1
 
-La arquitectura ya está preparada para lo que pide el enunciado en las próximas unidades:
-
-- **Autenticación de usuarios:** agregar una pantalla de inicio de sesión y navegación entre pantallas.
-- **Comunicación con APIs externas:** crear un `ApiTaskRepository` que cumpla el contrato `TaskRepository`. El hook, el dominio y la interfaz no cambian.
+La Unidad 1 entregó la gestión de tareas y la estructura base reutilizada por el equipo. La autenticación, los periféricos y la persistencia integrada quedaron incorporados en la [entrega de Unidad 2](#unidad-2--entrega-final), conservando las funcionalidades originales.
