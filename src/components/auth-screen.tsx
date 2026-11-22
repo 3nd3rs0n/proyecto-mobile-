@@ -12,6 +12,8 @@ export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
@@ -23,6 +25,8 @@ export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
     setRegistering((value) => !value);
     setPassword('');
     setConfirmation('');
+    setShowPassword(false);
+    setShowConfirmation(false);
     setNotice('');
     auth.clearError();
   };
@@ -44,10 +48,13 @@ export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
         setRegistering(false);
         setPassword('');
         setConfirmation('');
+        setShowPassword(false);
+        setShowConfirmation(false);
         setNotice('Cuenta creada. Inicia sesión con tu correo y contraseña.');
       }
     } else if (await auth.login(email, password)) {
       setPassword('');
+      setShowPassword(false);
     }
   };
 
@@ -55,22 +62,33 @@ export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView style={styles.safeArea} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
+          <Text style={styles.brand}>Ipss Eva 2</Text>
           <Text style={styles.brand}>✓ paso a paso</Text>
           <Text accessibilityRole="header" style={styles.title}>{registering ? 'Crea tu cuenta.' : 'Vuelve a tu ritmo.'}</Text>
           <Text style={styles.copy}>Tus cuentas y tareas se guardan en este dispositivo.</Text>
           <View style={styles.card}>
             {registering && <>
               <Text style={styles.label}>Nombre de usuario</Text>
-              <TextInput accessibilityLabel="Nombre de usuario" style={styles.input} value={name} onChangeText={setName} maxLength={80} autoComplete="name" editable={!auth.busy} />
+              <TextInput placeholder="Nombre de usuario" accessibilityLabel="Nombre de usuario" style={styles.input} value={name} onChangeText={setName} maxLength={80} autoComplete="name" editable={!auth.busy} />
             </>}
             <Text style={styles.label}>Correo electrónico</Text>
-            <TextInput accessibilityLabel="Correo electrónico" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" maxLength={254} editable={!auth.busy} />
+            <TextInput placeholder="Correo electrónico" accessibilityLabel="Correo electrónico" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" maxLength={254} editable={!auth.busy} />
             <Text style={styles.label}>Contraseña</Text>
-            <TextInput accessibilityLabel="Contraseña" style={styles.input} value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" autoCorrect={false} autoComplete={registering ? 'new-password' : 'current-password'} maxLength={128} editable={!auth.busy} />
+            <View style={styles.passwordField}>
+              <TextInput placeholder="Ingresa tu contraseña" accessibilityLabel="Contraseña" style={[styles.input, styles.passwordInput]} value={password} onChangeText={setPassword} secureTextEntry={!showPassword} autoCapitalize="none" autoCorrect={false} autoComplete={registering ? 'new-password' : 'current-password'} maxLength={128} editable={!auth.busy} />
+              <Pressable accessibilityRole="button" accessibilityLabel={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'} accessibilityState={{ selected: showPassword, disabled: auth.busy }} disabled={auth.busy} onPress={() => setShowPassword((visible) => !visible)} style={({ pressed }) => [styles.visibilityButton, pressed && styles.disabled]}>
+                <EyeIcon crossed={showPassword} />
+              </Pressable>
+            </View>
             {registering && <>
               <Text style={styles.copy}>Usa al menos 8 caracteres.</Text>
               <Text style={styles.label}>Confirmar contraseña</Text>
-              <TextInput accessibilityLabel="Confirmar contraseña" style={styles.input} value={confirmation} onChangeText={setConfirmation} secureTextEntry autoCapitalize="none" autoCorrect={false} autoComplete="new-password" maxLength={128} editable={!auth.busy} />
+              <View style={styles.passwordField}>
+                <TextInput placeholder="Confirmar contraseña" accessibilityLabel="Confirmar contraseña" style={[styles.input, styles.passwordInput]} value={confirmation} onChangeText={setConfirmation} secureTextEntry={!showConfirmation} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" maxLength={128} editable={!auth.busy} />
+                <Pressable accessibilityRole="button" accessibilityLabel={showConfirmation ? 'Ocultar confirmación de contraseña' : 'Mostrar confirmación de contraseña'} accessibilityState={{ selected: showConfirmation, disabled: auth.busy }} disabled={auth.busy} onPress={() => setShowConfirmation((visible) => !visible)} style={({ pressed }) => [styles.visibilityButton, pressed && styles.disabled]}>
+                  <EyeIcon crossed={showConfirmation} />
+                </Pressable>
+              </View>
             </>}
             {!!auth.error && <Text accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.error}>{auth.error}</Text>}
             {!!notice && <Text accessibilityLiveRegion="polite" style={styles.copy}>{notice}</Text>}
@@ -90,6 +108,13 @@ export function AuthScreen({ auth }: { auth: ReturnType<typeof useAuth> }) {
   );
 }
 
+function EyeIcon({ crossed }: { crossed: boolean }) {
+  return <View style={styles.eye} importantForAccessibility="no-hide-descendants">
+    <View style={styles.pupil} />
+    {crossed && <View style={styles.eyeSlash} />}
+  </View>;
+}
+
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: colors.background },
   content: { flexGrow: 1, justifyContent: 'center', width: '100%', maxWidth: 520, alignSelf: 'center', padding: 24, gap: 16 },
@@ -99,6 +124,12 @@ const styles = StyleSheet.create({
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: 20, gap: 12, borderWidth: 1, borderColor: colors.border },
   label: { color: colors.textBody, fontWeight: '600', fontSize: fontSize.body },
   input: { borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm, padding: 12, minHeight: 48, color: colors.text, fontSize: fontSize.input },
+  passwordField: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: colors.border, borderRadius: radius.sm },
+  passwordInput: { flex: 1, minWidth: 0, borderWidth: 0 },
+  visibilityButton: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center' },
+  eye: { width: 22, height: 14, borderWidth: 1.5, borderColor: colors.textMuted, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  pupil: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.textMuted },
+  eyeSlash: { position: 'absolute', width: 26, height: 2, backgroundColor: colors.textMuted, transform: [{ rotate: '-45deg' }] },
   error: { color: colors.danger, fontSize: fontSize.body, lineHeight: 21 },
   button: { minHeight: 48, flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary, borderRadius: radius.sm, marginTop: 8 },
   disabled: { opacity: 0.6 },
