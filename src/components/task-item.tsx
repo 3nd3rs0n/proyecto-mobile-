@@ -1,7 +1,8 @@
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { cardShadow, colors, fontSize, radius, touchTarget } from '../constants/theme';
-import type { Task } from '../types/task';
+import { describeLocation, mapUrl } from '../domain/task-location';
+import type { Task, TaskLocation } from '../types/task';
 
 type TaskItemProps = {
   task: Task;
@@ -13,7 +14,15 @@ type TaskItemProps = {
   disabled?: boolean;
 };
 
+function openInMaps(location: TaskLocation) {
+  const url = mapUrl(location, Platform.OS === 'ios' ? 'ios' : 'other');
+  // Si el teléfono no tiene una app de mapas, no hay nada más que hacer.
+  Linking.openURL(url).catch(() => {});
+}
+
 export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false, disabled = false }: TaskItemProps) {
+  const { location } = task;
+
   return (
     <View style={[styles.card, isEditing && styles.cardEditing]}>
       <Pressable
@@ -49,11 +58,17 @@ export function TaskItem({ task, onToggle, onDelete, onEdit, isEditing = false, 
           />
         )}
 
-        {task.location && (
-          <Text style={[styles.location, task.completed && styles.locationCompleted]}>
-            {task.location.address
-              ?? `${task.location.latitude.toFixed(5)}, ${task.location.longitude.toFixed(5)}`}
-          </Text>
+        {location && (
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={`Ver en el mapa dónde se creó ${task.title}`}
+            onPress={() => openInMaps(location)}
+            hitSlop={4}
+          >
+            <Text style={[styles.location, task.completed && styles.locationCompleted]}>
+              📍 {describeLocation(location)} · <Text style={styles.mapLink}>Ver en mapa</Text>
+            </Text>
+          </Pressable>
         )}
 
         {/* Botones con ícono y texto para que se entienda qué hace cada uno. */}
@@ -186,6 +201,10 @@ const styles = StyleSheet.create({
   },
   locationCompleted: {
     color: colors.placeholder,
+  },
+  mapLink: {
+    color: colors.primaryText,
+    fontWeight: '600',
   },
   actions: {
     flexDirection: 'row',

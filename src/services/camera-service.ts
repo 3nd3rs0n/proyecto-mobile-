@@ -21,31 +21,28 @@ export interface CameraService {
   pickFromLibrary(): Promise<DeviceResult<Photo>>;
 }
 
-const toResult = (result: PickerResult): DeviceResult<Photo> =>
-  result.canceled ? { status: 'cancelled' } : { status: 'ok', value: result.photo };
-
-const failure = (error: unknown): DeviceResult<Photo> => ({
-  status: 'error',
-  message: error instanceof Error ? error.message : 'No se pudo obtener la foto.',
-});
-
 export function createCameraService({ camera, permissions }: CameraServiceDeps): CameraService {
+  const pick = async (launch: () => Promise<PickerResult>): Promise<DeviceResult<Photo>> => {
+    try {
+      const result = await launch();
+      return result.canceled ? { status: 'cancelled' } : { status: 'ok', value: result.photo };
+    } catch (error) {
+      return {
+        status: 'error',
+        message: error instanceof Error ? error.message : 'No se pudo obtener la foto',
+      };
+    }
+  };
+
   return {
     async takePhoto() {
-      try {
-        const permission = await permissions.ensure('camera');
-        if (permission !== 'granted') return { status: 'permission-denied', permission };
-        return toResult(await camera.launchCamera());
-      } catch (error) {
-        return failure(error);
-      }
+      const permission = await permissions.ensure('camera');
+      if (permission !== 'granted') return { status: 'permission-denied', permission };
+      return pick(() => camera.launchCamera());
     },
-    async pickFromLibrary() {
-      try {
-        return toResult(await camera.launchLibrary());
-      } catch (error) {
-        return failure(error);
-      }
+    // La galería del sistema solo entrega la foto elegida, así que no necesita permiso.
+    pickFromLibrary() {
+      return pick(() => camera.launchLibrary());
     },
   };
 }

@@ -17,14 +17,15 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Permite elegir una foto para adjuntarla a tus tareas.",
-          "cameraPermission": "Permite tomar una foto para adjuntarla a una tarea."
+          "cameraPermission": "Paso a paso usa la cámara para que puedas adjuntar una foto a tus tareas.",
+          "photosPermission": "Paso a paso accede a tus fotos para que puedas adjuntar una imagen a tus tareas.",
+          "microphonePermission": false
         }
       ],
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Permite adjuntar la ubicación a tus tareas."
+          "locationWhenInUsePermission": "Paso a paso usa tu ubicación solo al crear una tarea, para registrar dónde la creaste."
         }
       ]
     ]

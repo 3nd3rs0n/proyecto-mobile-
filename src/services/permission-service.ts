@@ -1,6 +1,6 @@
 import type { PermissionState } from '../types/device';
 
-export type PermissionKind = 'camera' | 'mediaLibrary' | 'location';
+export type PermissionKind = 'camera' | 'location';
 
 /** Igual a lo que devuelven las librerías de Expo. */
 export type PermissionResponse = { granted: boolean; canAskAgain: boolean };
@@ -17,25 +17,36 @@ export interface PermissionService {
   openSettings(): Promise<void>;
 }
 
-export type PermissionGatewayMap = Record<PermissionKind, PermissionGateway>;
+export type PermissionServiceDeps = {
+  gateways: Record<PermissionKind, PermissionGateway>;
+  openSettings: () => Promise<void>;
+};
 
-const toState = (response: PermissionResponse): PermissionState =>
-  response.granted ? 'granted' : response.canAskAgain ? 'denied' : 'blocked';
+export function toPermissionState({ granted, canAskAgain }: PermissionResponse): PermissionState {
+  if (granted) return 'granted';
+  return canAskAgain ? 'denied' : 'blocked';
+}
 
-export function createPermissionService(
-  gateways: PermissionGatewayMap,
-  openSettings: () => Promise<void>,
-): PermissionService {
+export function createPermissionService({
+  gateways,
+  openSettings,
+}: PermissionServiceDeps): PermissionService {
   return {
     async check(kind) {
-      return toState(await gateways[kind].check());
+      try {
+        return toPermissionState(await gateways[kind].check());
+      } catch {
+        return 'denied';
+      }
     },
     async ensure(kind) {
-      const gateway = gateways[kind];
-      const current = await gateway.check();
-      if (current.granted) return 'granted';
-      if (!current.canAskAgain) return 'blocked';
-      return toState(await gateway.request());
+      try {
+        const current = toPermissionState(await gateways[kind].check());
+        if (current !== 'denied') return current;
+        return toPermissionState(await gateways[kind].request());
+      } catch {
+        return 'denied';
+      }
     },
     openSettings,
   };
