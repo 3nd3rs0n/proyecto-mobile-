@@ -38,6 +38,8 @@ La evaluación se centra en las **APIs internas del dispositivo y las funcionali
 - Gestionó permisos de cámara y ubicación, cancelaciones, permisos bloqueados y acceso a Ajustes. Ante demora o error del GPS, se utiliza la última ubicación conocida si es reciente; si falla la dirección, se conservan las coordenadas.
 - Incorporó pruebas automatizadas de cámara, permisos, ubicación y mensajes de error mediante simulaciones de las APIs nativas.
 
+Detalle completo (equivalencia con los plugins de Capacitor del enunciado, decisiones de permisos, 32 pruebas automáticas, 12 pruebas manuales y el error de iOS encontrado en el teléfono): [docs/eva2/perifericos.md](docs/eva2/perifericos.md).
+
 ### Integrante 2 — Almacenamiento local
 
 - Implementó la persistencia y recuperación de tareas mediante AsyncStorage, incluyendo título, descripción, estado, referencia de fotografía y ubicación asociada.
@@ -82,7 +84,7 @@ Las instrucciones y comandos actualizados están en [Cómo ejecutar la app](#2-c
 | `task-domain.test.ts`, `task-repository.test.ts` | Operaciones de tareas, persistencia, normalización de datos y respaldos. |
 | `auth.test.ts`, `user-tasks.test.ts` | Cuentas, sesión, aislamiento por usuario e integración con fotografías y ubicaciones. |
 
-Todos están en `tests/`. Las pruebas automatizadas usan almacenamiento y periféricos simulados; no sustituyen la comprobación física de cámara, permisos y GPS en Expo Go. Esta actualización documental no atribuye nuevos resultados de ejecución a la suite.
+Todos están en `tests/`. Las pruebas automatizadas usan almacenamiento y periféricos simulados; no sustituyen la comprobación física de cámara, permisos y GPS en Expo Go. `npm test`: 98 pruebas pasan.
 
 Para la comprobación en teléfono: crear dos cuentas, adjuntar una foto y ubicación a una tarea, editarla, reiniciar la app, cambiar de usuario y comprobar que cada cuenta conserve sus datos. Probar también cancelar la captura, denegar permisos y gestionar tareas guardadas sin conexión externa.
 

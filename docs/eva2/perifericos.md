@@ -135,3 +135,4 @@ Las pruebas 3 y 9 no tienen captura porque son transiciones (cerrar la cámara, 
 
 - En Expo Go los diálogos muestran los textos de Expo Go, no los de `app.json`.
 - Si el teléfono no tiene cámara (por ejemplo, el simulador de iOS), se informa como error genérico: Expo no entrega una forma confiable de distinguir ese caso.
+- Al editar una tarea ya guardada no se puede quitar su foto ni su ubicación (sí reemplazar la foto): la edición interpreta "sin foto" como "sin cambios".
